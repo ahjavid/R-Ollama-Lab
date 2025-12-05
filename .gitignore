@@ -1,0 +1,44 @@
+# R files
+.Rhistory
+.Rdata
+.RData
+.Ruserdata
+.Rproj.user/
+
+# R Markdown cache and output
+*_cache/
+*_files/
+*.html
+*.pdf
+*.docx
+
+# Package/project files
+.Rbuildignore
+*.Rproj
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Log files
+*.log
+
+# Data files (if large)
+*.csv
+*.xlsx
+*.rds
+*.RDS
+!example_*.csv
+
+# Environment
+.env
+.Renviron.local

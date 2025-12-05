@@ -1,0 +1,548 @@
+---
+title: "Local LLMs for Biostatistics: Practical Guide"
+author: "Amir Javid"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    code_folding: show
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = FALSE,
+  comment = "#>"
+)
+
+# Set eval to TRUE for chunks you want to run
+run_llm <- TRUE  # Change to TRUE to execute LLM calls
+```
+
+# Quick Start
+
+Install Ollama from [ollama.com](https://ollama.com), launch the app, then:
+
+```{r install, eval=FALSE}
+install.packages("ollamar")
+library(ollamar)
+test_connection()  # Should show "Ollama server is running"
+
+# Pull your models (one-time setup)
+pull("qwen2.5-coder:7b")       # Best for R code generation
+pull("ministral-3:8b")         # Best for complex reasoning
+pull("llama3.2:3b")            # Fast general-purpose
+```
+
+**Your Available Models:**
+
+| Model | Size | Best Use | Speed |
+|-------|------|----------|-------|
+| `qwen2.5-coder:7b` | 4.7GB | R code, data analysis | ⚡⚡ |
+| `qwen2.5-coder:3b` | 1.9GB | Quick questions | ⚡⚡⚡ |
+| `gemma3n:e4b` | 7.5GB | Complex reasoning | ⚡⚡ |
+| `qwen3-vl:8b` | 6.1GB | Vision, plot critique | ⚡⚡ |
+| `ministral-3:8b` | 6.0GB | Study design, reasoning | ⚡⚡ |
+| `llama3.2:3b` | 2.0GB | Explanations | ⚡⚡⚡ |
+| `mxbai-embed-large` | 669MB | Literature search | ⚡⚡⚡ |
+
+---
+
+# Core Workflow Patterns
+
+## Pattern 1: Statistical Consultation
+
+Get expert advice on methods and tests:
+
+```{r consultation, eval=run_llm}
+library(ollamar)
+
+# Setup: System prompt for biostatistics expert
+expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions."
+
+# Query function
+ask_expert <- function(question, model = "ministral-3:8b") {
+  msgs <- create_messages(
+    create_message(expert_prompt, role = "system"),
+    create_message(question)
+  )
+  chat(model, msgs, 
+       options = list(temperature = 0.3, num_predict = 800),
+       output = "text")
+}
+
+# Example: Which test?
+ask_expert("
+Study: RCT, 3 treatment arms (n=40 each)
+Outcome: Pain reduction (0-10 scale, skewed right)
+Question: Best statistical test and why?
+")
+```
+
+## Pattern 2: R Code Generation
+
+Generate analysis code with proper parameters:
+
+```{r codegen, eval=run_llm}
+# Code generation function
+generate_code <- function(prompt, model = "qwen2.5-coder:7b") {
+  generate(
+    model,
+    prompt,
+    options = list(
+      temperature = 0.2,      # Low for deterministic code
+      top_p = 0.3,
+      num_predict = 1500,
+      stop = c("```", "# END")
+    ),
+    output = "text"
+  )
+}
+
+# Example: Mixed model code
+code <- generate_code("
+Write R code for mixed-effects model:
+- Data: longitudinal BP measurements (n=200 patients, 4 timepoints)
+- Fixed: treatment (2 levels), time, treatment*time
+- Random: patient intercept
+- Use lme4, include model diagnostics
+- Keep code under 50 lines
+")
+
+cat(code)
+```
+
+## Pattern 3: Iterative Analysis Design
+
+Build complex analyses step-by-step:
+
+```{r iterative, eval=run_llm}
+# Start conversation
+conv <- create_messages(
+  create_message("You are a biostatistics consultant guiding analysis design.", role = "system"),
+  create_message("Design primary analysis for Phase 3 hypertension trial comparing Drug A vs Placebo")
+)
+
+# Step 1: Get approach
+step1 <- chat("ministral-3:8b", conv, output = "text")
+cat("=== APPROACH ===\n", step1, "\n\n")
+
+# Step 2: Add details, continue conversation
+conv <- append_message(conv, create_message(step1, role = "assistant"))
+conv <- append_message(conv, create_message(
+  "Primary endpoint: Change in SBP at 12 weeks. Baseline SBP ~145mmHg (SD=15). n=300 total."
+))
+
+step2 <- chat("ministral-3:8b", conv, output = "text")
+cat("=== DETAILED PLAN ===\n", step2, "\n\n")
+
+# Step 3: Get code (switch to code model)
+conv <- append_message(conv, create_message(step2, role = "assistant"))
+conv <- append_message(conv, create_message("Provide complete R code for this analysis"))
+
+code <- chat("qwen2.5-coder:7b", conv, output = "text")
+cat("=== CODE ===\n", code, "\n")
+```
+
+---
+
+# Practical Biostatistics Examples
+
+## Sample Size & Power
+
+```{r power, eval=run_llm}
+power_query <- "
+Trial design:
+- Outcome: HbA1c reduction (continuous, SD=1.2%)
+- MCID: 0.5% difference between groups
+- Power: 90%, α=0.05 (two-sided)
+- Expected dropout: 15%
+
+Calculate sample size per group. Provide R code using pwr package.
+"
+
+result <- generate_code(power_query)
+cat(result)
+
+# You can then run the generated code
+```
+
+## Survival Analysis Pipeline
+
+```{r survival, eval=run_llm}
+survival_code <- generate_code("
+Create survival analysis for cancer trial (n=250):
+1. Generate realistic data: time (months), status (0/1), treatment (A/B), age, stage
+2. Kaplan-Meier curves by treatment
+3. Log-rank test
+4. Cox model with treatment + age + stage
+5. Check PH assumption
+6. Forest plot of HRs
+Make it publication-ready. Use survival and survminer packages.
+")
+
+cat(survival_code)
+```
+
+## Missing Data Strategy
+
+```{r missing, eval=run_llm}
+missing_advice <- ask_expert("
+Longitudinal trial, 4 visits, ~20% dropout by visit 4 (likely MNAR).
+Primary: Change from baseline at visit 4.
+Options: MMRM, MI, LOCF, complete case?
+Recommend primary + sensitivity analyses.
+")
+
+cat(missing_advice)
+```
+
+## Propensity Score Analysis
+
+```{r psm, eval=run_llm}
+psm_code <- generate_code("
+Observational study comparing treatment effect:
+- Outcome: 30-day mortality (binary)
+- Treatment: Surgery vs Medical (n=800 each)
+- Confounders: age, comorbidities, severity score
+
+Complete PS analysis:
+1. Estimate propensity scores (logistic)
+2. Check balance before/after matching
+3. 1:1 matching with caliper
+4. Estimate treatment effect
+5. Sensitivity to hidden confounding
+Use MatchIt and sensemakr packages. Commented code.
+")
+
+cat(psm_code)
+```
+
+---
+
+# Parallel Processing for Efficiency
+
+Process multiple queries simultaneously:
+
+```{r parallel, eval=run_llm}
+library(httr2)
+
+# Multiple statistical questions
+questions <- c(
+  "When to use Wilcoxon vs t-test?",
+  "Interpret odds ratio of 2.5 in logistic regression",
+  "Difference between ITT and PP analysis",
+  "When to use Bonferroni vs FDR correction"
+)
+
+# Create parallel requests (fast model)
+reqs <- lapply(questions, function(q) {
+  generate("qwen2.5-coder:3b", q, 
+           options = list(temperature = 0.3, num_predict = 300),
+           output = "req")
+})
+
+# Execute in parallel
+resps <- req_perform_parallel(reqs, on_error = "continue")
+
+# Process results
+answers <- lapply(resps, resp_process, "text")
+
+# Display
+for(i in seq_along(questions)) {
+  cat(sprintf("\nQ%d: %s\n%s\n%s\n", i, questions[i], 
+              strrep("-", 60), answers[[i]]))
+}
+```
+
+---
+
+# Literature Search with Embeddings
+
+Semantic search through your literature database:
+
+```{r embeddings, eval=run_llm}
+# Your abstracts database
+abstracts <- c(
+  "Cox proportional hazards analysis of survival in stage III colon cancer patients treated with adjuvant chemotherapy.",
+  "Propensity score matching to evaluate effectiveness of drug-eluting stents vs bare-metal stents in real-world setting.",
+  "Mixed-effects model for repeated measures (MMRM) in longitudinal clinical trials with missing data.",
+  "Bayesian adaptive design for phase II oncology trials with continuous monitoring of efficacy and toxicity.",
+  "Meta-analysis of randomized trials comparing intensive vs standard glycemic control in type 2 diabetes."
+)
+
+# Generate embeddings
+embs <- lapply(abstracts, function(x) embed("mxbai-embed-large", x))
+
+# Search function
+search_literature <- function(query, abstracts, embeddings, top_n = 3) {
+  query_emb <- embed("mxbai-embed-large", query)
+  
+  # Cosine similarity
+  sims <- sapply(embeddings, function(e) sum(e * query_emb))
+  
+  # Return top results
+  idx <- order(sims, decreasing = TRUE)[1:top_n]
+  data.frame(
+    rank = 1:top_n,
+    similarity = round(sims[idx], 3),
+    abstract = abstracts[idx]
+  )
+}
+
+# Example search
+results <- search_literature("survival analysis Cox regression", abstracts, embs)
+print(results)
+```
+
+---
+
+# Structured Output for Reports
+
+Get responses in structured format:
+
+```{r structured, eval=run_llm}
+# Define schema
+analysis_schema <- list(
+  type = "object",
+  properties = list(
+    test_name = list(type = "string"),
+    assumptions = list(type = "array", items = list(type = "string")),
+    r_function = list(type = "string"),
+    interpretation = list(type = "string")
+  ),
+  required = c("test_name", "assumptions", "r_function")
+)
+
+# Get structured response
+result <- chat(
+  "qwen2.5-coder:7b",
+  create_message("Recommend test for comparing 3 groups with ordinal outcome (5-point scale)"),
+  format = analysis_schema,
+  output = "jsonlist"
+)
+
+# Access fields
+cat("Test:", result$test_name, "\n")
+cat("Function:", result$r_function, "\n")
+cat("\nAssumptions:\n")
+for(a in result$assumptions) cat("  -", a, "\n")
+```
+
+---
+
+# Helper Functions
+
+Reusable utilities for your workflow:
+
+```{r helpers}
+# Quick consultation
+quick_ask <- function(question, model = "llama3.2:3b") {
+  generate(model, question, 
+           options = list(temperature = 0.3, num_predict = 500),
+           output = "text")
+}
+
+# Safe code generation with retry
+safe_codegen <- function(prompt, model = "qwen2.5-coder:7b", max_retry = 3) {
+  for(i in 1:max_retry) {
+    result <- tryCatch(
+      generate_code(prompt, model),
+      error = function(e) {
+        message(sprintf("Attempt %d failed: %s", i, e$message))
+        if(i < max_retry) Sys.sleep(2)
+        NULL
+      }
+    )
+    if(!is.null(result)) return(result)
+  }
+  stop("Code generation failed after retries")
+}
+
+# Multi-model consensus
+get_consensus <- function(question, models = c("ministral-3:8b", "qwen2.5-coder:7b")) {
+  results <- lapply(models, function(m) {
+    cat(sprintf("\n=== %s ===\n", m))
+    resp <- quick_ask(question, m)
+    cat(resp, "\n")
+    resp
+  })
+  invisible(results)
+}
+```
+
+**Usage examples:**
+
+```{r helper-usage, eval=FALSE}
+# Quick question
+quick_ask("What's the formula for Cohen's d?")
+
+# Safe code generation with auto-retry
+code <- safe_codegen("Create function to calculate 95% CI for proportion")
+
+# Get multiple model opinions
+get_consensus("Should I adjust for baseline in ANCOVA for RCT?")
+```
+
+---
+
+# Model Selection Guide
+
+**Choose based on task complexity and speed needs:**
+
+```{r model-selector}
+select_model <- function(task, need_speed = FALSE) {
+  switch(task,
+    "code" = if(need_speed) "qwen2.5-coder:3b" else "qwen2.5-coder:7b",
+    "reasoning" = "gemma3n:e4b",
+    "quick" = "llama3.2:3b",
+    "vision" = "qwen3-vl:8b",
+    "embed" = "mxbai-embed-large",
+    "llama3.2:3b"  # default
+  )
+}
+
+# Example
+model <- select_model("code", need_speed = FALSE)
+cat("Selected model:", model)
+```
+
+---
+
+# Best Practices
+
+## 1. Verify Everything
+
+```{r verify, eval=FALSE}
+# Always test generated code
+code <- generate_code("Create t-test function")
+# Review before running!
+# eval(parse(text = code))
+
+# Cross-check statistical advice
+advice1 <- ask_expert("...", "ministral-3:8b")
+advice2 <- ask_expert("...", "qwen2.5-coder:7b")
+# Compare responses
+```
+
+## 2. Provide Rich Context
+
+```{r context-example, eval=FALSE}
+# Bad: Vague question
+"What test should I use?"
+
+# Good: Specific context
+"
+Study: 2-arm RCT (n=100 per arm)
+Outcome: QoL score 0-100 (continuous, normally distributed)
+Baseline: Measured
+Analysis: ANCOVA adjusting for baseline
+Question: Should I transform outcome? How to report?
+"
+```
+
+## 3. Optimize Parameters
+
+```{r params}
+# Task-specific parameters
+code_opts <- list(temperature = 0.2, top_p = 0.3, num_predict = 1500)
+reasoning_opts <- list(temperature = 0.4, top_p = 0.5, num_predict = 1000)
+creative_opts <- list(temperature = 0.6, top_p = 0.7, num_predict = 1200)
+
+# Use in functions
+generate("qwen2.5-coder:7b", "...", options = code_opts, output = "text")
+```
+
+---
+
+# Troubleshooting
+
+```{r troubleshoot, eval=FALSE}
+# Connection issues
+test_connection()
+# If failed: restart Ollama app
+
+# Model not found
+list_models()  # Check what you have
+pull("qwen2.5-coder:7b")  # Pull if missing
+
+# Out of memory
+# Use smaller model:
+generate("qwen2.5-coder:3b", "...", output = "text")
+
+# Slow performance
+# Reduce output length:
+generate("llama3.2:3b", "...", 
+         options = list(num_predict = 500), output = "text")
+```
+
+---
+
+# Real Example: Complete Analysis Workflow
+
+From design to code:
+
+```{r complete-example, eval=run_llm}
+# Step 1: Design consultation
+design <- ask_expert("
+Trial: compare 3 doses of new antihypertensive
+Primary: SBP change at week 12
+Secondary: DBP change, response rate (SBP<140)
+Covariates: baseline SBP, age, BMI
+Sample: n=75 per group
+Recommend primary analysis approach
+")
+cat("=== DESIGN ===\n", design, "\n\n")
+
+# Step 2: Generate analysis code
+code <- generate_code(sprintf("
+Based on this design:
+%s
+
+Create R code for:
+1. Data simulation (realistic)
+2. Primary analysis (ANCOVA)
+3. Secondary analyses
+4. Table 1
+5. Publication-quality plots
+Use tidyverse + emmeans. Well-commented.
+", design))
+
+cat("=== CODE ===\n", code, "\n\n")
+
+# Step 3: Generate reporting template
+report <- generate_code("
+Create R Markdown template for reporting the analysis above.
+Include: Methods section, Results section with inline R code,
+Tables and figures. Follow CONSORT style.
+")
+
+cat("=== REPORT TEMPLATE ===\n", report, "\n")
+```
+
+---
+
+# Resources
+
+- **ollamar docs**: [hauselin.github.io/ollama-r](https://hauselin.github.io/ollama-r/)
+- **Ollama models**: [ollama.com/library](https://ollama.com/library)
+- **GitHub issues**: [github.com/hauselin/ollama-r/issues](https://github.com/hauselin/ollama-r/issues)
+
+**Citation:**
+
+```
+Lin, H., & Safi, T. (2025). ollamar: An R package for running large 
+language models. Journal of Open Source Software, 10(105), 7211. 
+https://doi.org/10.21105/joss.07211
+```
+
+---
+
+```{r session-info}
+sessionInfo()
+```
