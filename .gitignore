@@ -8,7 +8,6 @@
 # R Markdown cache and output
 *_cache/
 *_files/
-*.html
 *.pdf
 *.docx
 
