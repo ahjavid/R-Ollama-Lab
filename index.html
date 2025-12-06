@@ -1801,7 +1801,7 @@ div.tocify {
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true"></a><span class="st">Outcome: Pain reduction (0-10 scale, skewed right)</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true"></a><span class="st">Question: Best statistical test and why?</span></span>
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true"></a><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>#&gt; [1] &quot;## Recommendation: **Kruskal-Wallis Test followed by Post-Hoc Tests**\n\n**Why:**\n\n* **Non-parametric:** The outcome variable (pain reduction) is skewed right, violating the normality assumption of parametric tests like ANOVA. Kruskal-Wallis is a non-parametric test suitable for skewed data.\n* **Multiple Comparisons:** With three treatment arms, we need to compare all pairs of groups. Post-hoc tests (e.g., Dunn&#39;s test with Bonferroni correction) are necessary to identify which specific pairs differ significantly after a significant Kruskal-Wallis result.\n* **Robustness:** Kruskal-Wallis is relatively robust to outliers, which can be common in pain measurement.\n\n**Key Assumptions:**\n\n* **Independent Samples:** The pain reduction scores from individuals in different treatment arms are independent of each other.\n* **Ordinal Data:** The pain scale is ordinal, meaning the differences between pain levels are not necessarily equal. Kruskal-Wallis is appropriate for ordinal data.\n* **Sufficient Sample Size:** While not strictly a test assumption, having n=40 per arm provides reasonable power for detecting significant differences.\n\n**Alternative (if data can be reasonably transformed):**\n\nIf the skewness is not severe and a reasonable transformation (e.g., log transformation) can make the data more normally distributed, then an **ANOVA** with a post-hoc test would be a more powerful option. However, the validity of the post-hoc tests would depend on the appropriateness of the transformation.\n\n\n\n**In summary, Kruskal-Wallis with post-hoc tests is the most appropriate statistical approach for this study design and outcome variable, given the likely skewed data.**\n\n\n\n&quot;</code></pre>
+<pre><code>#&gt; [1] &quot;## Recommendation: **Kruskal-Wallis Test followed by Post-Hoc Tests**\n\n**Why:**\n\n* **Non-parametric:** The outcome variable (pain reduction) is skewed right, violating the normality assumption of parametric tests like ANOVA. Kruskal-Wallis is a non-parametric test suitable for skewed data.\n* **Multiple Comparisons:** With three treatment arms, we need to compare all pairs of groups. Post-hoc tests (e.g., Dunn&#39;s test with Bonferroni correction) are necessary to identify which specific pairs differ significantly after a significant Kruskal-Wallis result.\n* **Robustness:** Kruskal-Wallis is relatively robust to outliers, which can be common in pain studies.\n\n**Key Assumptions:**\n\n* **Independent Samples:** The pain reduction scores within each treatment arm are independent of each other.\n* **Ordinal Data:** The pain scale is ordinal, meaning the differences between pain levels are not necessarily equal. Kruskal-Wallis is appropriate for ordinal data.\n* **Similar Distributions:** While not a strict requirement, Kruskal-Wallis performs best when the underlying distributions of the three treatment groups are somewhat similar.\n\n**Alternative (if assumptions are met):**\n\nIf the data can be reasonably transformed to approximate normality (e.g., using a log transformation), then an **ANOVA** with appropriate post-hoc tests would be a more powerful test. However, this requires careful consideration of the transformation&#39;s impact on interpretation.\n\n\n\n**Disclaimer:** This recommendation is based on the provided information. A more detailed analysis would involve examining the data distribution, potential outliers, and the specific research question to ensure the chosen test is most appropriate.\n\n\n\n&quot;</code></pre>
 </div>
 <div id="pattern-2-r-code-generation" class="section level2">
 <h2>Pattern 2: R Code Generation</h2>
@@ -1834,21 +1834,8 @@ div.tocify {
 #&gt; # Load necessary library
 #&gt; library(lme4)
 #&gt; 
-#&gt; # Simulate data (replace with actual data loading)
-#&gt; set.seed(123)
-#&gt; n_patients &lt;- 200
-#&gt; timepoints &lt;- 4
-#&gt; treatment_levels &lt;- 2
-#&gt; 
-#&gt; data &lt;- expand.grid(patient = 1:n_patients, time = 1:timepoints, treatment = factor(rep(1:treatment_levels, each = n_patients/timepoints)))
-#&gt; data$bp &lt;- rnorm(n=nrow(data), mean=120, sd=15) + 
-#&gt;            data$treatment * 5 + 
-#&gt;            data$time * 3 + 
-#&gt;            data$treatment * data$time * 2 + 
-#&gt;            rnorm(n=nrow(data), mean=0, sd=10)
-#&gt; 
-#&gt; # Fit mixed-effects model
-#&gt; model &lt;- lmer(bp ~ treatment * time + (1 | patient), data = data)
+#&gt; # Assuming &#39;bp_data&#39; is your data frame with columns &#39;patient&#39;, &#39;timepoint&#39;, &#39;treatment&#39;, and &#39;BP&#39;
+#&gt; model &lt;- lmer(BP ~ treatment * timepoint + (1 | patient), data = bp_data, REML = FALSE)
 #&gt; 
 #&gt; # Summary of the model
 #&gt; summary(model)
@@ -1857,7 +1844,7 @@ div.tocify {
 #&gt; plot(model)
 #&gt; ```
 #&gt; 
-#&gt; This code fits a mixed-effects model to simulate longitudinal BP measurements with fixed effects for treatment, time, and their interaction, and random intercepts for patients. It uses the `lme4` package and includes basic model diagnostics using the `plot()` function.</code></pre>
+#&gt; This code fits a mixed-effects model with fixed effects for `treatment`, `timepoint`, and their interaction, and random intercepts for each patient. It uses the `lme4` package to fit the model and includes basic diagnostics using the `plot()` function.</code></pre>
 </div>
 <div id="pattern-3-iterative-analysis-design" class="section level2">
 <h2>Pattern 3: Iterative Analysis Design</h2>
@@ -2111,83 +2098,77 @@ div.tocify {
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true"></a>code &lt;-<span class="st"> </span><span class="kw">chat</span>(<span class="st">&quot;qwen2.5-coder:7b&quot;</span>, conv, <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;=== CODE ===</span><span class="ch">\n</span><span class="st">&quot;</span>, code, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt; === CODE ===
-#&gt;  Sure! Below is a complete R script that demonstrates the primary analysis using ANCOVA with multiple imputation. This script assumes you have your dataset in a CSV file named `hypertension_data.csv` and it includes several columns: `subject_id`, `treatment`, `sbp_baseline`, `sbp_12wks`.
+#&gt;  Sure! Below is a comprehensive R code example for conducting the primary analysis as described. This includes loading necessary libraries, simulating data (since actual data from your trial would be used in practice), and performing ANCOVA using multiple imputation.
 #&gt; 
-#&gt; Let&#39;s start by loading necessary libraries and reading the data.
+#&gt; ```r
+#&gt; # Install and load necessary packages
+#&gt; install.packages(&quot;dplyr&quot;)
+#&gt; install.packages(&quot;mice&quot;)
+#&gt; install.packages(&quot;emmeans&quot;)
 #&gt; 
-#&gt; ```R
-#&gt; # Load necessary libraries
-#&gt; library(tidyverse)
+#&gt; library(dplyr)
 #&gt; library(mice)
-#&gt; library(multcomp)
+#&gt; library(emmeans)
 #&gt; 
-#&gt; # Read the dataset
-#&gt; data &lt;- read.csv(&quot;hypertension_data.csv&quot;)
+#&gt; # Simulate data for demonstration (replace this with your actual data loading code)
+#&gt; set.seed(123)  # For reproducibility
+#&gt; n &lt;- 300
 #&gt; 
-#&gt; # View first few rows of the dataset
-#&gt; head(data)
+#&gt; # Baseline characteristics
+#&gt; age &lt;- rnorm(n, mean = 55, sd = 10)
+#&gt; sex &lt;- factor(sample(c(&quot;Male&quot;, &quot;Female&quot;), n, replace = TRUE))
+#&gt; baseline_sbp &lt;- rnorm(n, mean = 145, sd = 15)
+#&gt; baseline_dbp &lt;- rnorm(n, mean = 85, sd = 10)
+#&gt; bmi &lt;- rnorm(n, mean = 25, sd = 5)
+#&gt; duration_hypertension &lt;- rnorm(n, mean = 5, sd = 3)  # in years
+#&gt; use_medication &lt;- factor(sample(c(&quot;Yes&quot;, &quot;No&quot;), n, replace = TRUE))
+#&gt; history_cvd &lt;- factor(sample(c(&quot;Yes&quot;, &quot;No&quot;), n, replace = TRUE), levels = c(&quot;No&quot;, &quot;Yes&quot;))
+#&gt; diabetes_status &lt;- factor(sample(c(&quot;Yes&quot;, &quot;No&quot;), n, replace = TRUE))
+#&gt; 
+#&gt; # Treatment assignment
+#&gt; treatment &lt;- factor(rep(c(&quot;Drug A&quot;, &quot;Placebo&quot;), each = n/2))
+#&gt; 
+#&gt; # Outcome: Change in SBP from baseline at 12 weeks
+#&gt; change_in_sbp &lt;- rnorm(n, mean = -5, sd = 10)  # Assume Drug A reduces SBP by 5 mmHg on average
+#&gt; 
+#&gt; # Create the dataset
+#&gt; data &lt;- data.frame(age, sex, baseline_sbp, baseline_dbp, bmi, duration_hypertension, use_medication, history_cvd, diabetes_status, treatment, change_in_sbp)
+#&gt; 
+#&gt; # Split the data into imputations (m = 5)
+#&gt; imputed_data &lt;- mice(data, m = 5, maxit = 50, seed = 123)
+#&gt; 
+#&gt; # Fit ANCOVA model for each imputation
+#&gt; ancova_models &lt;- with(imputed_data, aov(change_in_sbp ~ treatment + age + sex + baseline_sbp + baseline_dbp + bmi + duration_hypertension + use_medication + history_cvd + diabetes_status))
+#&gt; 
+#&gt; # Combine results using Rubin&#39;s rules
+#&gt; combined_result &lt;- pool(ancova_models)
+#&gt; 
+#&gt; # Extract summary statistics and p-values
+#&gt; summary(combined_result)
+#&gt; emm &lt;- emmeans(combined_result, ~ treatment | baseline_sbp)
+#&gt; emm_summary &lt;- summary(emm)
+#&gt; emm_pairs &lt;- pairs(emm)
+#&gt; 
+#&gt; # Print the results
+#&gt; print(summary(combined_result))
+#&gt; print(emm_summary)
+#&gt; print(emm_pairs)
 #&gt; ```
 #&gt; 
-#&gt; ### Data Cleaning
+#&gt; ### Explanation:
 #&gt; 
-#&gt; Assuming the data is clean, we proceed to perform multiple imputation.
-#&gt; 
-#&gt; ```R
-#&gt; # Define the formula for the covariates in ANCOVA
-#&gt; covariates &lt;- ~ treatment + age + sex + bmi + duration_hypertension + other_antihypertensives + prior_cvd + diabetes_status
-#&gt; 
-#&gt; # Perform multiple imputation
-#&gt; imp_data &lt;- mice(data, m = 5, method = &quot;pmm&quot;, predictorMeth = &quot;class&quot;, covariateMeth = &quot;covmean&quot;, seed = 123)
-#&gt; ```
-#&gt; 
-#&gt; ### Analyzing Each Imputed Dataset
-#&gt; 
-#&gt; We will perform ANCOVA on each imputed dataset and then pool the results.
-#&gt; 
-#&gt; ```R
-#&gt; # Perform ANCOVA on each imputed dataset
-#&gt; fit_list &lt;- lapply(1:5, function(i) {
-#&gt;   imp_i &lt;- complete(imp_data, i)
-#&gt;   lm(sbp_12wks ~ treatment + sbp_baseline + covariates, data = imp_i)
-#&gt; })
-#&gt; 
-#&gt; # Pool the results using Rubin&#39;s rules
-#&gt; pool_fit &lt;- rbind.lm(fit_list)
-#&gt; 
-#&gt; # Perform multiple comparisons (Tukey HSD) on the pooled results
-#&gt; summary(pool_fit)
-#&gt; post_hoc_test &lt;- glht(pool_fit, linfct = mcp(treatment = &quot;Tukey&quot;))
-#&gt; summary(post_hoc_test)
-#&gt; ```
-#&gt; 
-#&gt; ### Interpretation of Results
-#&gt; 
-#&gt; The output from `summary(pool_fit)` will give you an overview of the pooled ANCOVA results. The p-value for the treatment effect (i.e., the change in SBP) should be significant, indicating that Drug A is effective.
-#&gt; 
-#&gt; The `post_hoc_test` will provide detailed pairwise comparisons between Drug A and Placebo, including adjusted means and confidence intervals.
-#&gt; 
-#&gt; ### Reporting
-#&gt; 
-#&gt; Here&#39;s an example of how you might report the results:
-#&gt; 
-#&gt; ```R
-#&gt; # Extracting relevant information for reporting
-#&gt; p_value &lt;- summary(pool_fit)$coefficients[&quot;treatmentDrug A&quot;, &quot;Pr(&gt;|t|)&quot;]
-#&gt; adjusted_mean_drug_a &lt;- coef(summary(pool_fit))[1, 1]
-#&gt; adjusted_mean_placebo &lt;- coef(summary(pool_fit))[2, 1]
-#&gt; 
-#&gt; # Reporting
-#&gt; cat(&quot;P-value of the treatment effect (Drug A vs. Placebo): &quot;, p_value, &quot;\n&quot;)
-#&gt; cat(&quot;Adjusted Mean SBP Change at 12 weeks for Drug A: &quot;, adjusted_mean_drug_a, &quot; mmHg\n&quot;)
-#&gt; cat(&quot;Adjusted Mean SBP Change at 12 weeks for Placebo: &quot;, adjusted_mean_placebo, &quot; mmHg\n&quot;)
-#&gt; ```
+#&gt; 1. **Simulate Data**: The code simulates a dataset with 300 observations, including baseline characteristics and treatment assignment.
+#&gt; 2. **Multiple Imputation**: The `mice` package is used to perform multiple imputations.
+#&gt; 3. **ANCOVA Model**: ANCOVA models are fitted for each imputed dataset using the `aov` function.
+#&gt; 4. **Combining Results**: The results from all imputations are combined using Rubin&#39;s rules with the `pool` function from the `mice` package.
+#&gt; 5. **Post-Hoc Comparisons**: Emmeans (estimated marginal means) and pairwise comparisons are performed to interpret the treatment effects.
 #&gt; 
 #&gt; ### Notes:
-#&gt; - **Power Analysis:** Ensure that the power analysis was based on the assumption of baseline SBP and other relevant covariates.
-#&gt; - **Subgroup Analyses:** If you have specific subgroups to analyze, modify the script accordingly.
-#&gt; - **Software:** The provided code uses R for data manipulation, multiple imputation, and ANCOVA.
+#&gt; - Replace the simulated data loading part with your actual dataset.
+#&gt; - Adjust the power analysis based on the assumed effect size, alpha level, and power level.
+#&gt; - Ensure that all covariates are included in the ANCOVA model as specified.
 #&gt; 
-#&gt; If you need further assistance or additional functionality (e.g., handling different types of missing data, more complex subgroup analyses), feel free to ask!</code></pre>
+#&gt; This code provides a complete workflow for conducting the primary analysis using multiple imputation.</code></pre>
 <hr />
 </div>
 </div>
@@ -2277,7 +2258,7 @@ div.tocify {
 #&gt; time &lt;- rexp(n, rate = 0.1) + rnorm(n, mean = 6, sd = 2)
 #&gt; 
 #&gt; # Event status (0: censored, 1: event occurred)
-#&gt; status &lt;- ifelse(runif(n) &lt; 0.7, 1, 0)
+#&gt; status &lt;- ifelse(runif(n) &lt; 0.8, 1, 0)
 #&gt; 
 #&gt; # Treatment (A or B)
 #&gt; treatment &lt;- sample(c(&quot;A&quot;, &quot;B&quot;), n, replace = TRUE)
@@ -2292,11 +2273,11 @@ div.tocify {
 #&gt; data &lt;- data.frame(time = time, status = status, treatment = treatment, age = age, stage = stage)
 #&gt; 
 #&gt; # Fit Kaplan-Meier curves by treatment
-#&gt; fit &lt;- survfit(Surv(time, status) ~ treatment, data = data)
+#&gt; fit_km &lt;- survfit(Surv(time, status) ~ treatment, data = data)
 #&gt; 
 #&gt; # Plot Kaplan-Meier curves
-#&gt; ggsurvplot(fit, data = data, pval = TRUE, conf.int = TRUE, risk.table = TRUE,
-#&gt;            legend.labs = c(&quot;Treatment A&quot;, &quot;Treatment B&quot;),
+#&gt; ggsurvplot(fit_km, data = data, pval = TRUE, conf.int = TRUE,
+#&gt;            risk.table = TRUE, legend.labs = c(&quot;Treatment A&quot;, &quot;Treatment B&quot;),
 #&gt;            title = &quot;Kaplan-Meier Curves by Treatment&quot;,
 #&gt;            xlab = &quot;Time (months)&quot;, ylab = &quot;Survival Probability&quot;)
 #&gt; 
@@ -2305,34 +2286,35 @@ div.tocify {
 #&gt; print(log_rank_test)
 #&gt; 
 #&gt; # Fit Cox model with treatment + age + stage
-#&gt; cox_model &lt;- coxph(Surv(time, status) ~ treatment + age + stage, data = data)
+#&gt; fit_cox &lt;- coxph(Surv(time, status) ~ treatment + age + stage, data = data)
 #&gt; 
 #&gt; # Print summary of the Cox model
-#&gt; summary(cox_model)
+#&gt; summary(fit_cox)
 #&gt; 
 #&gt; # Check PH assumption
 #&gt; par(mfrow = c(1, 3))
-#&gt; plot(cox_model, which = 1:3)
-#&gt; title(&quot;Proportional Hazards Assumption&quot;)
+#&gt; plot(fit_cox, which = 1:3)
+#&gt; title(&quot;Cox Model - Proportional Hazards Assumption&quot;)
 #&gt; 
 #&gt; # Create forest plot of HRs
-#&gt; forest_plot &lt;- ggsurvfit(cox_model, data = data, conf.int = TRUE,
+#&gt; forest_plot &lt;- ggsurvfit(fit_cox, data = data, conf.int = TRUE,
 #&gt;                         legend.labs = c(&quot;Treatment A&quot;, &quot;Treatment B&quot;),
 #&gt;                         title = &quot;Forest Plot of Hazard Ratios&quot;,
-#&gt;                         xlab = &quot;Time (months)&quot;, ylab = &quot;Survival Probability&quot;)
+#&gt;                         xlab = &quot;Hazard Ratio (HR)&quot;, ylab = &quot;Covariate&quot;)
+#&gt; 
 #&gt; print(forest_plot)
 #&gt; ```
 #&gt; 
 #&gt; ### Explanation:
 #&gt; 
-#&gt; 1. **Generate realistic data**: We use exponential distribution for time to event and normal distributions for age and stage. The status is generated based on a probability threshold.
-#&gt; 2. **Kaplan-Meier curves by treatment**: We fit the Kaplan-Meier model and plot the survival curves with confidence intervals and risk tables.
-#&gt; 3. **Log-rank test**: We perform the log-rank test to compare the survival distributions between treatments.
+#&gt; 1. **Generate realistic data**: We use exponential distribution for time to event and normal distributions for age and stage. The status is generated based on a probability of an event occurring.
+#&gt; 2. **Kaplan-Meier curves by treatment**: We fit Kaplan-Meier survival curves for each treatment group and plot them using `ggsurvplot`.
+#&gt; 3. **Log-rank test**: We perform the log-rank test to compare the survival distributions between the two treatment groups.
 #&gt; 4. **Cox model with treatment + age + stage**: We fit a Cox proportional hazards model including treatment, age, and stage as covariates.
 #&gt; 5. **Check PH assumption**: We plot the scaled Schoenfeld residuals for each covariate to check the proportional hazards assumption.
 #&gt; 6. **Forest plot of HRs**: We create a forest plot to visualize the hazard ratios (HRs) and their confidence intervals.
 #&gt; 
-#&gt; This script provides a comprehensive survival analysis for a cancer trial, suitable for publication. Adjust the parameters and distributions as needed based on your specific data and research questions.</code></pre>
+#&gt; This script provides a comprehensive survival analysis for a cancer trial, suitable for publication in a scientific journal.</code></pre>
 </div>
 <div id="missing-data-strategy" class="section level2">
 <h2>Missing Data Strategy</h2>
@@ -2351,36 +2333,29 @@ div.tocify {
 #&gt; **Rationale:**
 #&gt; 
 #&gt; * **Handles Missing Data:** MMRM is specifically designed for longitudinal data with missingness, particularly when the missingness is not completely at random (MNAR). It leverages the information from observed data at each visit to estimate the change from baseline.
-#&gt; * **Accounts for Correlation:** MMRM appropriately models the correlation between repeated measurements within individuals, leading to more efficient and accurate estimates.
-#&gt; * **Flexibility:** It allows for the inclusion of covariates to adjust for potential confounders.
+#&gt; * **Flexibility:** MMRM can accommodate various covariance structures for the within-subject correlation, allowing for more realistic modeling of longitudinal data.
+#&gt; * **Robustness to MNAR:** While not perfectly immune, MMRM is generally more robust to MNAR than complete case analysis or simpler methods like MI.
 #&gt; 
 #&gt; **Key Assumptions:**
 #&gt; 
-#&gt; * **Missing at Random (MAR):** While likely MNAR, MMRM performs reasonably well under the MAR assumption. If MNAR is strong, sensitivity analyses are crucial.
-#&gt; * **Linearity:** The relationship between the predictor and the outcome is assumed to be linear within the MMRM framework.
-#&gt; * **No Time-Varying Covariates:** The covariates included in the model are assumed to be constant over time.
+#&gt; * **Missing at Random (MAR):** MMRM performs best when the missingness is MAR. While you suspect MNAR, MMRM can still provide reasonable estimates if the MNAR mechanism is not strongly related to the predictors.
+#&gt; * **Linearity:** The relationship between the predictors and the outcome at each visit is assumed to be linear.
+#&gt; * **Independence of Errors:** The errors at each visit are assumed to be independent.
 #&gt; 
 #&gt; **Sensitivity Analyses:**
 #&gt; 
-#&gt; To address the potential impact of MNAR, conduct the following sensitivity analyses:
+#&gt; To assess the robustness of the primary analysis, conduct the following sensitivity analyses:
 #&gt; 
-#&gt; 1. **Pattern Mixture Models (PMM):** This approach explicitly models different missing data mechanisms. It can help assess the robustness of the primary analysis to various MNAR scenarios.
-#&gt; 2. **Last Observation Carried Forward (LOCF) Analysis:** Compare the results of the MMRM analysis to a LOCF analysis. A substantial difference would indicate the potential influence of MNAR.
-#&gt; 3. **Imputation Methods (e.g., Multiple Imputation):**  Impute missing values and perform the analysis. This provides a range of results under different assumptions about the missing data.
+#&gt; 1. **Multiple Imputation (MI):** Perform MI using a suitable method (e.g., chained equations) and compare the results to the MMRM analysis. This helps assess the potential impact of different missing data assumptions.
+#&gt; 2. **Last Observation Carried Forward (LOCF):** Analyze the data using LOCF as a baseline approach. This provides a simple comparison to the MMRM results and highlights potential biases introduced by ignoring the longitudinal structure.
+#&gt; 3. **Pattern Mixture Models (PMM):** If there&#39;s evidence of distinct patterns of missingness, PMM can be considered. This allows for different models to be fitted to different groups of individuals with varying missing data patterns.
 #&gt; 
-#&gt; **Why other options are less suitable:**
+#&gt; **Why not other options?**
 #&gt; 
-#&gt; * **Missing at Random (MAR) Models (MI):** While MI can handle missing data, it assumes MAR, which is questionable given the likely MNAR.
-#&gt; * **LOCF:** This method can introduce bias, especially with substantial dropout, as it assumes the last observed value is representative of subsequent values.
-#&gt; * **Complete Case:** This approach ignores all participants with any missing data, leading to a significant loss of information and potential bias.
+#&gt; * **Complete Case Analysis:** Highly susceptible to bias when a substantial proportion of data is missing, especially with MNAR. It can lead to a misleadingly optimistic estimate of the treatment effect.
+#&gt; * **Mixed-Effects Models (without merging):** While also handling missing data, they might not be as flexible as MMRM in accommodating complex covariance structures and can be more computationally intensive.
 #&gt; 
-#&gt; 
-#&gt; 
-#&gt; **In summary:** MMRM is the recommended primary analysis method due to its ability to handle longitudinal data and missingness. Sensitivity analyses are essential to evaluate the robustness of the findings in the presence of likely MNAR.
-#&gt; 
-#&gt; 
-#&gt; 
-#&gt; **Disclaimer:** This recommendation is based on the provided information and general statistical principles. A thorough understanding of the trial design, data characteristics, and the nature of the outcome variable is necessary for a definitive analysis plan. Consulting with a statistician experienced in longitudinal data analysis is highly recommended.</code></pre>
+#&gt; **Important Note:** Clearly document the assumptions made for each analysis method and interpret the results cautiously, considering the potential for MNAR. Consult with a statistician experienced in longitudinal data analysis for detailed implementation and interpretation.</code></pre>
 </div>
 <div id="propensity-score-analysis" class="section level2">
 <h2>Propensity Score Analysis</h2>
@@ -2416,52 +2391,54 @@ div.tocify {
 #&gt; propensity_scores &lt;- matchit(outcome ~ treatment + age + comorbidities + severity_score,
 #&gt;                              data = data,
 #&gt;                              method = &quot;logistic&quot;,
-#&gt;                              caliper = 0.2) # Caliper set to 0.2 for matching
+#&gt;                              caliper = 0.2) # Caliper width can be adjusted based on the data
 #&gt; 
-#&gt; # Step 2: Check balance before and after matching
+#&gt; # Step 2: Check balance before matching
 #&gt; summary(propensity_scores)
 #&gt; 
-#&gt; # Plot pre-matching distribution of confounders
-#&gt; par(mfrow = c(1, 3))
-#&gt; plot(propensity_scores, which = &quot;all&quot;)
-#&gt; 
-#&gt; # Step 3: Perform 1:1 matching with caliper
+#&gt; # Step 3: Perform 1:1 matching with a caliper
 #&gt; matched_data &lt;- matchit(outcome ~ treatment + age + comorbidities + severity_score,
 #&gt;                         data = data,
 #&gt;                         method = &quot;nearest&quot;,
-#&gt;                         caliper = 0.2)
-#&gt; 
-#&gt; # Check balance after matching
-#&gt; summary(matched_data)
-#&gt; plot(matched_data, which = &quot;all&quot;)
+#&gt;                         caliper = 0.2) # Caliper width can be adjusted based on the data
 #&gt; 
 #&gt; # Step 4: Estimate treatment effect using the matched data
-#&gt; treatment_effect &lt;- summary(propensity_scores, treat = &quot;treatment&quot;, method = &quot;ATT&quot;)
+#&gt; treatment_effect &lt;- summary(matched_data, treat = &quot;treatment&quot;, by = &quot;outcome&quot;)
 #&gt; print(treatment_effect)
 #&gt; 
 #&gt; # Step 5: Sensitivity analysis to hidden confounding
 #&gt; # Create a sensitivity plot
 #&gt; sensitivity_plot &lt;- sensitivity(matched_data,
 #&gt;                                outcome ~ treatment + age + comorbidities + severity_score,
-#&gt;                                method = &quot;logistic&quot;,
-#&gt;                                caliper = 0.2)
-#&gt; plot(sensitivity_plot, main = &quot;Sensitivity Analysis Plot&quot;)
+#&gt;                                method = &quot;nearest&quot;,
+#&gt;                                caliper = 0.2,
+#&gt;                                test = &quot;ate&quot;)
 #&gt; 
-#&gt; # Interpret the results:
-#&gt; # - The `summary(propensity_scores)` and `plot(propensity_scores)` functions will help you check if the propensity scores are well-balanced across treatment groups.
-#&gt; # - The `treatment_effect` object from `summary(propensity_scores)` provides estimates of the treatment effect.
-#&gt; # - The sensitivity plot helps assess how robust your findings are to unmeasured confounding.
+#&gt; # Plot the sensitivity analysis results
+#&gt; plot(sensitivity_plot)
+#&gt; 
+#&gt; # Interpretation:
+#&gt; # - The propensity score summary in Step 2 should show that confounders are balanced between treatment groups.
+#&gt; # - The treatment effect estimate in Step 4 provides an adjusted estimate of the treatment effect.
+#&gt; # - The sensitivity plot in Step 5 helps assess how robust the treatment effect is to unmeasured confounding.
 #&gt; 
 #&gt; ```
 #&gt; 
 #&gt; ### Explanation:
-#&gt; 1. **Estimate Propensity Scores**: We use logistic regression to estimate propensity scores, which represent the probability of receiving a particular treatment given the observed covariates.
-#&gt; 2. **Check Balance**: Before and after matching, we check if the distribution of confounders is balanced between the treatment groups using summary statistics and plots.
-#&gt; 3. **1:1 Matching with Caliper**: We perform 1:1 nearest neighbor matching with a caliper to ensure that matched pairs are close in propensity scores.
-#&gt; 4. **Estimate Treatment Effect**: After matching, we estimate the treatment effect using the `summary` function from `MatchIt`.
-#&gt; 5. **Sensitivity Analysis**: We use the `sensitivity` function from `sensemakr` to assess how sensitive our results are to unmeasured confounding.
 #&gt; 
-#&gt; This script provides a comprehensive approach to performing PSA and sensitivity analysis in R, ensuring that your treatment effect estimates are robust and reliable.</code></pre>
+#&gt; 1. **Estimate Propensity Scores**: We use logistic regression to estimate propensity scores, which are the probabilities of receiving the treatment given the observed covariates.
+#&gt; 
+#&gt; 2. **Check Balance Before Matching**: The `summary` function from `MatchIt` provides a balance table that shows how well the covariates are balanced between the treatment groups before matching.
+#&gt; 
+#&gt; 3. **1:1 Matching with Caliper**: We perform 1:1 nearest neighbor matching with a caliper to ensure that matched pairs are close in propensity scores.
+#&gt; 
+#&gt; 4. **Estimate Treatment Effect**: After matching, we estimate the treatment effect using the `summary` function from `MatchIt`. The `treat = &quot;treatment&quot;` argument specifies that we want to estimate the effect of receiving surgery compared to medical care.
+#&gt; 
+#&gt; 5. **Sensitivity Analysis**: We use the `sensitivity` function from `sensemakr` to perform a sensitivity analysis, which helps assess how robust the treatment effect is to unmeasured confounding. The plot generated by this function can help visualize the impact of potential hidden confounders on the estimated treatment effect.
+#&gt; 
+#&gt; ### Notes:
+#&gt; - Adjust the caliper width based on your data and the distribution of propensity scores.
+#&gt; - Interpret the results carefully, especially the sensitivity analysis plot, which provides insights into how sensitive the treatment effect estimate is to unmeasured confounding.</code></pre>
 <hr />
 </div>
 </div>
@@ -2499,76 +2476,90 @@ div.tocify {
 <pre><code>#&gt; 
 #&gt; Q1: When to use Wilcoxon vs t-test?
 #&gt; ------------------------------------------------------------
-#&gt; The choice between the Wilcoxon rank-sum test (also known as Mann-Whitney U test) and the t-test depends on several factors, including the nature of your data, assumptions about the population distribution, and the specific research question you are trying to answer.
+#&gt; The choice between the Wilcoxon signed-rank test and the t-test depends on several factors, including the nature of your data, the assumptions you can make about it, and the specific research question you are trying to answer. Here are some guidelines to help you decide which test is more appropriate:
 #&gt; 
-#&gt; ### When to Use a T-test
+#&gt; ### Wilcoxon Signed-Rank Test
 #&gt; 
-#&gt; 1. **Normal Distribution Assumption**: The t-test assumes that both groups have approximately normal distributions. This is particularly important for large sample sizes (typically n &gt; 30) or when the data is normally distributed.
+#&gt; 1. **Data Type**: The Wilcoxon signed-rank test is used for paired samples where:
+#&gt;    - The data are ordinal or continuous.
+#&gt;    - The difference between the pairs is symmetrically distributed around zero.
+#&gt;    - The differences can be positive, negative, or zero.
 #&gt; 
-#&gt; 2. **Equal Variance Assumption**: The t-test also assumes that the variances of the two populations are equal (homogeneity of variance). This can be checked using Levene&#39;s test or the F-test.
+#&gt; 2. **Assumptions**:
+#&gt;    - Independence of observations within each pair.
+#&gt;    - Symmetry in the distribution of differences.
+#&gt;    - No outliers (or they are handled appropriately).
 #&gt; 
-#&gt; 3. **Continuous Data**: The t-test is suitable for continuous data, such as measurements or scores.
+#&gt; 3. **Use Cases**:
+#&gt;    - Comparing two related samples where the difference between the paired observations is not normally distributed.
+#&gt;    - When you have repeated measurements on the same subjects and want to compare them.
 #&gt; 
-#&gt; 4. **Independent Samples**: The t-test is used when you have two independent groups that are compared to each other.
+#&gt; ### t-test
 #&gt; 
-#&gt; ### When to Use a Wilcoxon Test
+#&gt; 1. **Data Type**: The t-test is used for independent samples:
+#&gt;    - The data are continuous.
+#&gt;    - The differences between the groups are assumed to be normally distributed.
+#&gt;    - Independence of observations within each group.
 #&gt; 
-#&gt; 1. **Non-Normal Distribution**: If the data in your samples does not follow a normal distribution, the Wilcoxon test is more appropriate. This is particularly useful for small sample sizes or when the data is skewed.
-#&gt; 
-#&gt; 2. **Ordinal Data**: The Wilcoxon test can be used with ordinal data, which are categorical variables that have a natural order but no equal intervals between categories (e.g., &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;).
-#&gt; 
-#&gt; 3.
+#&gt; 2. **Assumptions**:
+#&gt;    - Independence of observations between groups.
+#&gt;    - Normality of the distribution of data in each group.
+#&gt;    - Equal variances (homogeneity of variance) or unequal variances
 #&gt; 
 #&gt; Q2: Interpret odds ratio of 2.5 in logistic regression
 #&gt; ------------------------------------------------------------
-#&gt; In logistic regression, the odds ratio (OR) is a measure of how much the odds of an event increase or decrease for each unit change in a predictor variable. An OR of 2.5 means that for every one-unit increase in the predictor variable, the odds of the event occurring are multiplied by 2.5.
+#&gt; In logistic regression, the odds ratio (OR) is a measure that represents how much the odds of an event occurring change for each unit increase in the predictor variable. An OR of 2.5 means that for every one-unit increase in the predictor variable, the odds of the event occurring are multiplied by 2.5.
 #&gt; 
-#&gt; To interpret this:
+#&gt; Here&#39;s a step-by-step interpretation:
 #&gt; 
-#&gt; 1. **Positive OR**: If the OR is greater than 1, it indicates that an increase in the predictor variable is associated with an increased likelihood of the outcome. In this case, an OR of 2.5 means that for every one-unit increase in the predictor, the odds of the event occurring are multiplied by 2.5.
+#&gt; 1. **Understanding Odds**: In logistic regression, the odds of an event is defined as the ratio of the probability of the event happening to the probability of it not happening. Mathematically, if \( p \) is the probability of the event occurring, then the odds are given by:
+#&gt;    \[
+#&gt;    \text{Odds} = \frac{p}{1-p}
+#&gt;    \]
 #&gt; 
-#&gt; 2. **Negative OR**: If the OR is less than 1, it indicates that an increase in the predictor variable is associated with a decreased likelihood of the outcome. However, this interpretation is not as straightforward because it suggests that the effect is multiplicative but in the opposite direction.
+#&gt; 2. **Interpreting OR**: An OR of 2.5 indicates that for a one-unit increase in the predictor variable, the odds of the event occurring are multiplied by 2.5. This means:
+#&gt;    - If the predictor variable increases by 1 unit, the odds of the event happening increase to \( 2.5 \times \text{original odds} \).
+#&gt;    - Conversely, if the predictor variable decreases by 1 unit, the odds of the event happening decrease to \( \frac{\text{original odds}}{2.5} \).
 #&gt; 
-#&gt; 3. **Interpretation in terms of probability**: The odds ratio can be converted to a risk ratio (RR) by dividing the OR by 1 + OR. This gives you an idea of how much the relative risk of the event increases or decreases for each unit change in the predictor variable.
-#&gt; 
-#&gt;    - If the RR is greater than 1, it indicates that the relative risk of the event increases.
-#&gt;    - If the RR is less than 1, it indicates that the relative risk of the event decreases
+#&gt; 3. **Example**: Suppose you are modeling the probability that a person will buy a product based on their income level. If the OR for
 #&gt; 
 #&gt; Q3: Difference between ITT and PP analysis
 #&gt; ------------------------------------------------------------
-#&gt; ITT (Intent-to-Treat) and PP (Probability of Treatment) are two statistical methods used in clinical trials to evaluate the efficacy of treatments.
+#&gt; ITT (Intent-to-Treat) and PP (Per Protocol) analysis are two different methods used in clinical trials to analyze the results of treatment.
 #&gt; 
-#&gt; ITT is a method that follows the actual treatment assignment of participants throughout the trial, regardless of whether they completed the study or not. It is based on the assumption that all participants who were assigned to receive the treatment will actually receive it. This method is often used when there are concerns about dropout rates in the study and it aims to provide a more accurate estimate of the true effect of the treatment.
+#&gt; ITT analysis is a more conservative approach that includes all patients who were assigned to receive the intervention, regardless of whether they completed the study or not. This method assumes that the treatment was given as intended, even if it wasn&#39;t followed through by the participants. ITT analysis provides a more accurate representation of the true effect of the treatment.
 #&gt; 
-#&gt; PP, on the other hand, is a method that only considers those participants who completed the trial and received the treatment. It does not take into account the dropouts or the participants who did not receive the treatment at all. This method is often used when there are concerns about the completeness of data collection in the study and it aims to provide an estimate of the effect of the treatment on the population that actually received it.
+#&gt; PP analysis, on the other hand, is a stricter approach that only includes patients who completed the study and received the intervention as intended. This method assumes that all participants in the trial were compliant with the protocol and that they followed through with their assigned treatments. PP analysis provides a more accurate representation of the true effect of the treatment among those who were able to complete the study.
 #&gt; 
-#&gt; In summary, ITT provides a more accurate estimate of the true effect of the treatment by accounting for dropouts, while PP provides an estimate of the effect of the treatment on the population that actually received it.
+#&gt; In summary, ITT analysis includes all patients who were assigned to receive the intervention, while PP analysis only includes patients who completed the study and received the intervention as intended.
 #&gt; 
 #&gt; Q4: When to use Bonferroni vs FDR correction
 #&gt; ------------------------------------------------------------
-#&gt; Bonferroni and False Discovery Rate (FDR) corrections are both used in statistical hypothesis testing to control the false discovery rate when multiple hypotheses are tested simultaneously. However, they have different assumptions and are suitable for different scenarios.
+#&gt; Bonferroni and False Discovery Rate (FDR) corrections are both used in statistical hypothesis testing to control the family-wise error rate (FWER) or the expected proportion of false positives, respectively. However, they differ in their approach and assumptions.
 #&gt; 
 #&gt; ### Bonferroni Correction
 #&gt; 
-#&gt; **When to Use Bonferroni:**
-#&gt; 1. **Independent Tests:** When you are performing independent tests on each hypothesis.
-#&gt; 2. **Small Number of Tests:** When the number of tests is relatively small (e.g., less than 10).
-#&gt; 3. **High Significance Level:** When you want a very conservative approach to controlling the false discovery rate.
+#&gt; **Use Case:**
+#&gt; - **Multiple Comparisons:** When you have multiple hypotheses to test simultaneously.
+#&gt; - **Strict Control:** You want to ensure that the overall FWER remains below a specified threshold (e.g., 0.05).
+#&gt; - **Assumptions:**
+#&gt;   - Independence of tests.
+#&gt;   - Homogeneity of variance across groups.
 #&gt; 
-#&gt; **How Bonferroni Works:**
-#&gt; - It adjusts the significance level for each individual test by dividing the original significance level (α) by the number of tests (m).
-#&gt; - If the adjusted p-value is less than or equal to the adjusted significance level, you reject the null hypothesis for that test.
+#&gt; **Example Scenario:**
+#&gt; Suppose you are conducting multiple t-tests on different pairs of samples to determine if there is a significant difference between them. If you perform 10 such tests, the Bonferroni correction would adjust the significance level for each test by dividing it by the number of tests (10). This ensures that the probability of making at least one false positive across all tests remains below 0.05.
 #&gt; 
-#&gt; ### False Discovery Rate (FDR) Correction
+#&gt; ### False Discovery Rate Correction
 #&gt; 
-#&gt; **When to Use FDR:**
-#&gt; 1. **Dependent Tests:** When you are performing dependent tests on each hypothesis.
-#&gt; 2. **Large Number of Tests:** When the number of tests is large (e.g., more than 10).
-#&gt; 3. **Less Conservative Approach:** When you want a less conservative approach to controlling the false discovery rate.
+#&gt; **Use Case:**
+#&gt; - **Multiple Comparisons:** Similar to Bonferroni, but with a different approach to controlling the expected proportion of false positives.
+#&gt; - **Flexibility:** Allows for some false discoveries while still controlling the FWER.
+#&gt; - **Assumptions:**
+#&gt;   - Independence of tests.
+#&gt;   - Homogeneity of variance across groups.
 #&gt; 
-#&gt; **How FDR Works:**
-#&gt; - It controls the expected proportion of false positives among all significant results.
-#&gt; - It uses a single threshold for all tests</code></pre>
+#&gt; **Example Scenario:**
+#&gt; In a</code></pre>
 <hr />
 </div>
 <div id="literature-search-with-embeddings" class="section level1">
@@ -2618,7 +2609,7 @@ div.tocify {
 <div id="structured-output-for-reports" class="section level1">
 <h1>Structured Output for Reports</h1>
 <p>Get responses in structured format:</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true"></a><span class="co"># Define schema</span></span>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true"></a><span class="co"># Define schema (JSON schema as R list)</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true"></a>analysis_schema &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true"></a>  <span class="dt">type =</span> <span class="st">&quot;object&quot;</span>,</span>
 <span id="cb25-4"><a href="#cb25-4" aria-hidden="true"></a>  <span class="dt">properties =</span> <span class="kw">list</span>(</span>
@@ -2627,92 +2618,99 @@ div.tocify {
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true"></a>    <span class="dt">r_function =</span> <span class="kw">list</span>(<span class="dt">type =</span> <span class="st">&quot;string&quot;</span>),</span>
 <span id="cb25-8"><a href="#cb25-8" aria-hidden="true"></a>    <span class="dt">interpretation =</span> <span class="kw">list</span>(<span class="dt">type =</span> <span class="st">&quot;string&quot;</span>)</span>
 <span id="cb25-9"><a href="#cb25-9" aria-hidden="true"></a>  ),</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true"></a>  <span class="dt">required =</span> <span class="kw">c</span>(<span class="st">&quot;test_name&quot;</span>, <span class="st">&quot;assumptions&quot;</span>, <span class="st">&quot;r_function&quot;</span>)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true"></a>  <span class="dt">required =</span> <span class="kw">list</span>(<span class="st">&quot;test_name&quot;</span>, <span class="st">&quot;assumptions&quot;</span>, <span class="st">&quot;r_function&quot;</span>)</span>
 <span id="cb25-11"><a href="#cb25-11" aria-hidden="true"></a>)</span>
 <span id="cb25-12"><a href="#cb25-12" aria-hidden="true"></a></span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true"></a><span class="co"># Get structured response</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true"></a><span class="co"># Get structured response (use output = &quot;structured&quot;)</span></span>
 <span id="cb25-14"><a href="#cb25-14" aria-hidden="true"></a>result &lt;-<span class="st"> </span><span class="kw">chat</span>(</span>
 <span id="cb25-15"><a href="#cb25-15" aria-hidden="true"></a>  <span class="st">&quot;qwen2.5-coder:7b&quot;</span>,</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true"></a>  <span class="kw">create_message</span>(<span class="st">&quot;Recommend test for comparing 3 groups with ordinal outcome (5-point scale)&quot;</span>),</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true"></a>  <span class="kw">create_message</span>(<span class="st">&quot;Recommend a statistical test for comparing 3 independent groups with an ordinal outcome (5-point Likert scale). Return the test name, key assumptions, R function to use, and interpretation guidance.&quot;</span>),</span>
 <span id="cb25-17"><a href="#cb25-17" aria-hidden="true"></a>  <span class="dt">format =</span> analysis_schema,</span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true"></a>  <span class="dt">output =</span> <span class="st">&quot;jsonlist&quot;</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true"></a>  <span class="dt">output =</span> <span class="st">&quot;structured&quot;</span></span>
 <span id="cb25-19"><a href="#cb25-19" aria-hidden="true"></a>)</span>
 <span id="cb25-20"><a href="#cb25-20" aria-hidden="true"></a></span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true"></a><span class="co"># Access fields</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true"></a><span class="co"># Access fields from the structured response</span></span>
 <span id="cb25-22"><a href="#cb25-22" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Test:&quot;</span>, result<span class="op">$</span>test_name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>#&gt; Test:</code></pre>
+<pre><code>#&gt; Test: Kruskal-Wallis H-test</code></pre>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Function:&quot;</span>, result<span class="op">$</span>r_function, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>#&gt; Function:</code></pre>
+<pre><code>#&gt; Function: kruskal.test(x ~ g)</code></pre>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Assumptions:</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt; 
 #&gt; Assumptions:</code></pre>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true"></a><span class="cf">for</span>(a <span class="cf">in</span> result<span class="op">$</span>assumptions) <span class="kw">cat</span>(<span class="st">&quot;  -&quot;</span>, a, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>#&gt;   - The data from all groups are ordinal. 
+#&gt;   - The distributions of the outcomes in each group are similar (i.e., homogeneity of variances). 
+#&gt;   - The observations in each group are independent of each other.</code></pre>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">Interpretation:</span><span class="ch">\n</span><span class="st">&quot;</span>, result<span class="op">$</span>interpretation, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>#&gt; 
+#&gt; Interpretation:
+#&gt;  The Kruskal-Wallis H-test is used to determine if there are statistically significant differences between the medians of three or more independent groups with ordinal data. A p-value less than 0.05 indicates that at least one group&#39;s median is significantly different from the others. If you find a significant result, follow up with post-hoc tests (e.g., Dunn&#39;s test) to identify which specific pairs of groups differ significantly.</code></pre>
 <hr />
 </div>
 <div id="helper-functions" class="section level1">
 <h1>Helper Functions</h1>
 <p>Reusable utilities for your workflow:</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true"></a><span class="co"># Quick consultation</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true"></a>quick_ask &lt;-<span class="st"> </span><span class="cf">function</span>(question, <span class="dt">model =</span> <span class="st">&quot;llama3.2:3b&quot;</span>) {</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true"></a>  <span class="kw">generate</span>(model, question, </span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true"></a>           <span class="dt">temperature =</span> <span class="fl">0.3</span>, <span class="dt">num_predict =</span> <span class="dv">500</span>,</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true"></a>           <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true"></a>}</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true"></a></span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true"></a><span class="co"># Safe code generation with retry</span></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true"></a>safe_codegen &lt;-<span class="st"> </span><span class="cf">function</span>(prompt, <span class="dt">model =</span> <span class="st">&quot;qwen2.5-coder:7b&quot;</span>, <span class="dt">max_retry =</span> <span class="dv">3</span>) {</span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>max_retry) {</span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true"></a>    result &lt;-<span class="st"> </span><span class="kw">tryCatch</span>(</span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true"></a>      <span class="kw">generate_code</span>(prompt, model),</span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true"></a>      <span class="dt">error =</span> <span class="cf">function</span>(e) {</span>
-<span id="cb32-14"><a href="#cb32-14" aria-hidden="true"></a>        <span class="kw">message</span>(<span class="kw">sprintf</span>(<span class="st">&quot;Attempt %d failed: %s&quot;</span>, i, e<span class="op">$</span>message))</span>
-<span id="cb32-15"><a href="#cb32-15" aria-hidden="true"></a>        <span class="cf">if</span>(i <span class="op">&lt;</span><span class="st"> </span>max_retry) <span class="kw">Sys.sleep</span>(<span class="dv">2</span>)</span>
-<span id="cb32-16"><a href="#cb32-16" aria-hidden="true"></a>        <span class="ot">NULL</span></span>
-<span id="cb32-17"><a href="#cb32-17" aria-hidden="true"></a>      }</span>
-<span id="cb32-18"><a href="#cb32-18" aria-hidden="true"></a>    )</span>
-<span id="cb32-19"><a href="#cb32-19" aria-hidden="true"></a>    <span class="cf">if</span>(<span class="op">!</span><span class="kw">is.null</span>(result)) <span class="kw">return</span>(result)</span>
-<span id="cb32-20"><a href="#cb32-20" aria-hidden="true"></a>  }</span>
-<span id="cb32-21"><a href="#cb32-21" aria-hidden="true"></a>  <span class="kw">stop</span>(<span class="st">&quot;Code generation failed after retries&quot;</span>)</span>
-<span id="cb32-22"><a href="#cb32-22" aria-hidden="true"></a>}</span>
-<span id="cb32-23"><a href="#cb32-23" aria-hidden="true"></a></span>
-<span id="cb32-24"><a href="#cb32-24" aria-hidden="true"></a><span class="co"># Multi-model consensus</span></span>
-<span id="cb32-25"><a href="#cb32-25" aria-hidden="true"></a>get_consensus &lt;-<span class="st"> </span><span class="cf">function</span>(question, <span class="dt">models =</span> <span class="kw">c</span>(<span class="st">&quot;gemma3n:e4b&quot;</span>, <span class="st">&quot;qwen2.5-coder:7b&quot;</span>)) {</span>
-<span id="cb32-26"><a href="#cb32-26" aria-hidden="true"></a>  results &lt;-<span class="st"> </span><span class="kw">lapply</span>(models, <span class="cf">function</span>(m) {</span>
-<span id="cb32-27"><a href="#cb32-27" aria-hidden="true"></a>    <span class="kw">cat</span>(<span class="kw">sprintf</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">=== %s ===</span><span class="ch">\n</span><span class="st">&quot;</span>, m))</span>
-<span id="cb32-28"><a href="#cb32-28" aria-hidden="true"></a>    resp &lt;-<span class="st"> </span><span class="kw">quick_ask</span>(question, m)</span>
-<span id="cb32-29"><a href="#cb32-29" aria-hidden="true"></a>    <span class="kw">cat</span>(resp, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb32-30"><a href="#cb32-30" aria-hidden="true"></a>    resp</span>
-<span id="cb32-31"><a href="#cb32-31" aria-hidden="true"></a>  })</span>
-<span id="cb32-32"><a href="#cb32-32" aria-hidden="true"></a>  <span class="kw">invisible</span>(results)</span>
-<span id="cb32-33"><a href="#cb32-33" aria-hidden="true"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true"></a><span class="co"># Quick consultation</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true"></a>quick_ask &lt;-<span class="st"> </span><span class="cf">function</span>(question, <span class="dt">model =</span> <span class="st">&quot;llama3.2:3b&quot;</span>) {</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true"></a>  <span class="kw">generate</span>(model, question, </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true"></a>           <span class="dt">temperature =</span> <span class="fl">0.3</span>, <span class="dt">num_predict =</span> <span class="dv">500</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true"></a>           <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true"></a>}</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true"></a><span class="co"># Safe code generation with retry</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true"></a>safe_codegen &lt;-<span class="st"> </span><span class="cf">function</span>(prompt, <span class="dt">model =</span> <span class="st">&quot;qwen2.5-coder:7b&quot;</span>, <span class="dt">max_retry =</span> <span class="dv">3</span>) {</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true"></a>  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>max_retry) {</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true"></a>    result &lt;-<span class="st"> </span><span class="kw">tryCatch</span>(</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true"></a>      <span class="kw">generate_code</span>(prompt, model),</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true"></a>      <span class="dt">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true"></a>        <span class="kw">message</span>(<span class="kw">sprintf</span>(<span class="st">&quot;Attempt %d failed: %s&quot;</span>, i, e<span class="op">$</span>message))</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true"></a>        <span class="cf">if</span>(i <span class="op">&lt;</span><span class="st"> </span>max_retry) <span class="kw">Sys.sleep</span>(<span class="dv">2</span>)</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true"></a>        <span class="ot">NULL</span></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true"></a>      }</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true"></a>    )</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true"></a>    <span class="cf">if</span>(<span class="op">!</span><span class="kw">is.null</span>(result)) <span class="kw">return</span>(result)</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true"></a>  }</span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true"></a>  <span class="kw">stop</span>(<span class="st">&quot;Code generation failed after retries&quot;</span>)</span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true"></a>}</span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true"></a></span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true"></a><span class="co"># Multi-model consensus</span></span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true"></a>get_consensus &lt;-<span class="st"> </span><span class="cf">function</span>(question, <span class="dt">models =</span> <span class="kw">c</span>(<span class="st">&quot;gemma3n:e4b&quot;</span>, <span class="st">&quot;qwen2.5-coder:7b&quot;</span>)) {</span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true"></a>  results &lt;-<span class="st"> </span><span class="kw">lapply</span>(models, <span class="cf">function</span>(m) {</span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true"></a>    <span class="kw">cat</span>(<span class="kw">sprintf</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">=== %s ===</span><span class="ch">\n</span><span class="st">&quot;</span>, m))</span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true"></a>    resp &lt;-<span class="st"> </span><span class="kw">quick_ask</span>(question, m)</span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true"></a>    <span class="kw">cat</span>(resp, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb35-30"><a href="#cb35-30" aria-hidden="true"></a>    resp</span>
+<span id="cb35-31"><a href="#cb35-31" aria-hidden="true"></a>  })</span>
+<span id="cb35-32"><a href="#cb35-32" aria-hidden="true"></a>  <span class="kw">invisible</span>(results)</span>
+<span id="cb35-33"><a href="#cb35-33" aria-hidden="true"></a>}</span></code></pre></div>
 <p><strong>Usage examples:</strong></p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true"></a><span class="co"># Quick question</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true"></a><span class="kw">quick_ask</span>(<span class="st">&quot;What&#39;s the formula for Cohen&#39;s d?&quot;</span>)</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true"></a></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true"></a><span class="co"># Safe code generation with auto-retry</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true"></a>code &lt;-<span class="st"> </span><span class="kw">safe_codegen</span>(<span class="st">&quot;Create function to calculate 95% CI for proportion&quot;</span>)</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true"></a></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true"></a><span class="co"># Get multiple model opinions</span></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true"></a><span class="kw">get_consensus</span>(<span class="st">&quot;Should I adjust for baseline in ANCOVA for RCT?&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true"></a><span class="co"># Quick question</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true"></a><span class="kw">quick_ask</span>(<span class="st">&quot;What&#39;s the formula for Cohen&#39;s d?&quot;</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true"></a><span class="co"># Safe code generation with auto-retry</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true"></a>code &lt;-<span class="st"> </span><span class="kw">safe_codegen</span>(<span class="st">&quot;Create function to calculate 95% CI for proportion&quot;</span>)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true"></a></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true"></a><span class="co"># Get multiple model opinions</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true"></a><span class="kw">get_consensus</span>(<span class="st">&quot;Should I adjust for baseline in ANCOVA for RCT?&quot;</span>)</span></code></pre></div>
 <hr />
 </div>
 <div id="model-selection-guide" class="section level1">
 <h1>Model Selection Guide</h1>
 <p><strong>Choose based on task complexity and speed needs:</strong></p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true"></a>select_model &lt;-<span class="st"> </span><span class="cf">function</span>(task, <span class="dt">need_speed =</span> <span class="ot">FALSE</span>) {</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true"></a>  <span class="cf">switch</span>(task,</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true"></a>    <span class="st">&quot;code&quot;</span> =<span class="st"> </span><span class="cf">if</span>(need_speed) <span class="st">&quot;qwen2.5-coder:3b&quot;</span> <span class="cf">else</span> <span class="st">&quot;qwen2.5-coder:7b&quot;</span>,</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true"></a>    <span class="st">&quot;reasoning&quot;</span> =<span class="st"> &quot;gemma3n:e4b&quot;</span>,</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true"></a>    <span class="st">&quot;quick&quot;</span> =<span class="st"> &quot;llama3.2:3b&quot;</span>,</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true"></a>    <span class="st">&quot;vision&quot;</span> =<span class="st"> &quot;qwen3-vl:8b&quot;</span>,</span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true"></a>    <span class="st">&quot;embed&quot;</span> =<span class="st"> &quot;mxbai-embed-large&quot;</span>,</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true"></a>    <span class="st">&quot;llama3.2:3b&quot;</span>  <span class="co"># default</span></span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true"></a>  )</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true"></a>}</span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true"></a></span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true"></a><span class="co"># Example</span></span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true"></a>model &lt;-<span class="st"> </span><span class="kw">select_model</span>(<span class="st">&quot;code&quot;</span>, <span class="dt">need_speed =</span> <span class="ot">FALSE</span>)</span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Selected model:&quot;</span>, model)</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true"></a>select_model &lt;-<span class="st"> </span><span class="cf">function</span>(task, <span class="dt">need_speed =</span> <span class="ot">FALSE</span>) {</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true"></a>  <span class="cf">switch</span>(task,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true"></a>    <span class="st">&quot;code&quot;</span> =<span class="st"> </span><span class="cf">if</span>(need_speed) <span class="st">&quot;qwen2.5-coder:3b&quot;</span> <span class="cf">else</span> <span class="st">&quot;qwen2.5-coder:7b&quot;</span>,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true"></a>    <span class="st">&quot;reasoning&quot;</span> =<span class="st"> &quot;gemma3n:e4b&quot;</span>,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true"></a>    <span class="st">&quot;quick&quot;</span> =<span class="st"> &quot;llama3.2:3b&quot;</span>,</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true"></a>    <span class="st">&quot;vision&quot;</span> =<span class="st"> &quot;qwen3-vl:8b&quot;</span>,</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true"></a>    <span class="st">&quot;embed&quot;</span> =<span class="st"> &quot;mxbai-embed-large&quot;</span>,</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true"></a>    <span class="st">&quot;llama3.2:3b&quot;</span>  <span class="co"># default</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true"></a>  )</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true"></a>}</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true"></a></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true"></a><span class="co"># Example</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true"></a>model &lt;-<span class="st"> </span><span class="kw">select_model</span>(<span class="st">&quot;code&quot;</span>, <span class="dt">need_speed =</span> <span class="ot">FALSE</span>)</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;Selected model:&quot;</span>, model)</span></code></pre></div>
 <pre><code>#&gt; Selected model: qwen2.5-coder:7b</code></pre>
 <hr />
 </div>
@@ -2720,84 +2718,84 @@ div.tocify {
 <h1>Best Practices</h1>
 <div id="verify-everything" class="section level2">
 <h2>1. Verify Everything</h2>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true"></a><span class="co"># Always test generated code</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true"></a>code &lt;-<span class="st"> </span><span class="kw">generate_code</span>(<span class="st">&quot;Create t-test function&quot;</span>)</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true"></a><span class="co"># Review before running!</span></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true"></a><span class="co"># eval(parse(text = code))</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true"></a></span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true"></a><span class="co"># Cross-check statistical advice</span></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true"></a>advice1 &lt;-<span class="st"> </span><span class="kw">ask_expert</span>(<span class="st">&quot;...&quot;</span>, <span class="st">&quot;gemma3n:e4b&quot;</span>)</span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true"></a>advice2 &lt;-<span class="st"> </span><span class="kw">ask_expert</span>(<span class="st">&quot;...&quot;</span>, <span class="st">&quot;qwen2.5-coder:7b&quot;</span>)</span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true"></a><span class="co"># Compare responses</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true"></a><span class="co"># Always test generated code</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true"></a>code &lt;-<span class="st"> </span><span class="kw">generate_code</span>(<span class="st">&quot;Create t-test function&quot;</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true"></a><span class="co"># Review before running!</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true"></a><span class="co"># eval(parse(text = code))</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true"></a><span class="co"># Cross-check statistical advice</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true"></a>advice1 &lt;-<span class="st"> </span><span class="kw">ask_expert</span>(<span class="st">&quot;...&quot;</span>, <span class="st">&quot;gemma3n:e4b&quot;</span>)</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true"></a>advice2 &lt;-<span class="st"> </span><span class="kw">ask_expert</span>(<span class="st">&quot;...&quot;</span>, <span class="st">&quot;qwen2.5-coder:7b&quot;</span>)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true"></a><span class="co"># Compare responses</span></span></code></pre></div>
 </div>
 <div id="provide-rich-context" class="section level2">
 <h2>2. Provide Rich Context</h2>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true"></a><span class="co"># Bad: Vague question</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true"></a><span class="st">&quot;What test should I use?&quot;</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true"></a></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true"></a><span class="co"># Good: Specific context</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true"></a><span class="st">&quot;</span></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true"></a><span class="st">Study: 2-arm RCT (n=100 per arm)</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true"></a><span class="st">Outcome: QoL score 0-100 (continuous, normally distributed)</span></span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true"></a><span class="st">Baseline: Measured</span></span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true"></a><span class="st">Analysis: ANCOVA adjusting for baseline</span></span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true"></a><span class="st">Question: Should I transform outcome? How to report?</span></span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true"></a><span class="st">&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true"></a><span class="co"># Bad: Vague question</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true"></a><span class="st">&quot;What test should I use?&quot;</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true"></a></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true"></a><span class="co"># Good: Specific context</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true"></a><span class="st">&quot;</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true"></a><span class="st">Study: 2-arm RCT (n=100 per arm)</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true"></a><span class="st">Outcome: QoL score 0-100 (continuous, normally distributed)</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true"></a><span class="st">Baseline: Measured</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true"></a><span class="st">Analysis: ANCOVA adjusting for baseline</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true"></a><span class="st">Question: Should I transform outcome? How to report?</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true"></a><span class="st">&quot;</span></span></code></pre></div>
 </div>
 <div id="optimize-parameters" class="section level2">
 <h2>3. Optimize Parameters</h2>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true"></a><span class="co"># Task-specific parameters (pass directly to functions)</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true"></a><span class="co"># Code generation: low temp, high tokens for complete output</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.2, top_p = 0.3, num_predict = 2000-3000)</span></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true"></a></span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true"></a><span class="co"># Reasoning: moderate temperature</span></span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.4, top_p = 0.5, num_predict = 1500)</span></span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true"></a></span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true"></a><span class="co"># Quick answers: lower tokens</span></span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.3, num_predict = 500-1000)</span></span>
-<span id="cb38-10"><a href="#cb38-10" aria-hidden="true"></a></span>
-<span id="cb38-11"><a href="#cb38-11" aria-hidden="true"></a><span class="co"># Complex tasks (full analysis): use higher num_predict to avoid truncation</span></span>
-<span id="cb38-12"><a href="#cb38-12" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.2, num_predict = 3000)</span></span>
-<span id="cb38-13"><a href="#cb38-13" aria-hidden="true"></a></span>
-<span id="cb38-14"><a href="#cb38-14" aria-hidden="true"></a><span class="co"># Example usage</span></span>
-<span id="cb38-15"><a href="#cb38-15" aria-hidden="true"></a><span class="kw">generate</span>(<span class="st">&quot;qwen2.5-coder:7b&quot;</span>, <span class="st">&quot;...&quot;</span>, <span class="dt">temperature =</span> <span class="fl">0.2</span>, <span class="dt">num_predict =</span> <span class="dv">2000</span>, <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true"></a><span class="co"># Task-specific parameters (pass directly to functions)</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true"></a><span class="co"># Code generation: low temp, high tokens for complete output</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.2, top_p = 0.3, num_predict = 2000-3000)</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true"></a><span class="co"># Reasoning: moderate temperature</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.4, top_p = 0.5, num_predict = 1500)</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true"></a></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true"></a><span class="co"># Quick answers: lower tokens</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.3, num_predict = 500-1000)</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true"></a></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true"></a><span class="co"># Complex tasks (full analysis): use higher num_predict to avoid truncation</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true"></a><span class="co"># generate(..., temperature = 0.2, num_predict = 3000)</span></span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true"></a></span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true"></a><span class="co"># Example usage</span></span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true"></a><span class="kw">generate</span>(<span class="st">&quot;qwen2.5-coder:7b&quot;</span>, <span class="st">&quot;...&quot;</span>, <span class="dt">temperature =</span> <span class="fl">0.2</span>, <span class="dt">num_predict =</span> <span class="dv">2000</span>, <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt; [1] &quot;Hello! How can I assist you today?&quot;</code></pre>
 <hr />
 </div>
 </div>
 <div id="troubleshooting" class="section level1">
 <h1>Troubleshooting</h1>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true"></a><span class="co"># Connection issues</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true"></a><span class="kw">test_connection</span>()</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true"></a><span class="co"># If failed: restart Ollama app</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true"></a></span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true"></a><span class="co"># Model not found</span></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true"></a><span class="kw">list_models</span>()  <span class="co"># Check what you have</span></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true"></a><span class="kw">pull</span>(<span class="st">&quot;qwen2.5-coder:7b&quot;</span>)  <span class="co"># Pull if missing</span></span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true"></a></span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true"></a><span class="co"># Out of memory</span></span>
-<span id="cb40-10"><a href="#cb40-10" aria-hidden="true"></a><span class="co"># Use smaller model:</span></span>
-<span id="cb40-11"><a href="#cb40-11" aria-hidden="true"></a><span class="kw">generate</span>(<span class="st">&quot;qwen2.5-coder:3b&quot;</span>, <span class="st">&quot;...&quot;</span>, <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span>
-<span id="cb40-12"><a href="#cb40-12" aria-hidden="true"></a></span>
-<span id="cb40-13"><a href="#cb40-13" aria-hidden="true"></a><span class="co"># Slow performance</span></span>
-<span id="cb40-14"><a href="#cb40-14" aria-hidden="true"></a><span class="co"># Reduce output length:</span></span>
-<span id="cb40-15"><a href="#cb40-15" aria-hidden="true"></a><span class="kw">generate</span>(<span class="st">&quot;llama3.2:3b&quot;</span>, <span class="st">&quot;...&quot;</span>, </span>
-<span id="cb40-16"><a href="#cb40-16" aria-hidden="true"></a>         <span class="dt">num_predict =</span> <span class="dv">500</span>, <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true"></a><span class="co"># Connection issues</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true"></a><span class="kw">test_connection</span>()</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true"></a><span class="co"># If failed: restart Ollama app</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true"></a><span class="co"># Model not found</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true"></a><span class="kw">list_models</span>()  <span class="co"># Check what you have</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true"></a><span class="kw">pull</span>(<span class="st">&quot;qwen2.5-coder:7b&quot;</span>)  <span class="co"># Pull if missing</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true"></a></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true"></a><span class="co"># Out of memory</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true"></a><span class="co"># Use smaller model:</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true"></a><span class="kw">generate</span>(<span class="st">&quot;qwen2.5-coder:3b&quot;</span>, <span class="st">&quot;...&quot;</span>, <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true"></a></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true"></a><span class="co"># Slow performance</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true"></a><span class="co"># Reduce output length:</span></span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true"></a><span class="kw">generate</span>(<span class="st">&quot;llama3.2:3b&quot;</span>, <span class="st">&quot;...&quot;</span>, </span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true"></a>         <span class="dt">num_predict =</span> <span class="dv">500</span>, <span class="dt">output =</span> <span class="st">&quot;text&quot;</span>)</span></code></pre></div>
 <hr />
 </div>
 <div id="real-example-complete-analysis-workflow" class="section level1">
 <h1>Real Example: Complete Analysis Workflow</h1>
 <p>From design to code:</p>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true"></a><span class="co"># Step 1: Design consultation</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true"></a>design &lt;-<span class="st"> </span><span class="kw">ask_expert</span>(<span class="st">&quot;</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true"></a><span class="st">Trial: compare 3 doses of new antihypertensive</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true"></a><span class="st">Primary: SBP change at week 12</span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true"></a><span class="st">Secondary: DBP change, response rate (SBP&lt;140)</span></span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true"></a><span class="st">Covariates: baseline SBP, age, BMI</span></span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true"></a><span class="st">Sample: n=75 per group</span></span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true"></a><span class="st">Recommend primary analysis approach</span></span>
-<span id="cb41-9"><a href="#cb41-9" aria-hidden="true"></a><span class="st">&quot;</span>)</span>
-<span id="cb41-10"><a href="#cb41-10" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;=== DESIGN ===</span><span class="ch">\n</span><span class="st">&quot;</span>, design, <span class="st">&quot;</span><span class="ch">\n\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true"></a><span class="co"># Step 1: Design consultation</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true"></a>design &lt;-<span class="st"> </span><span class="kw">ask_expert</span>(<span class="st">&quot;</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true"></a><span class="st">Trial: compare 3 doses of new antihypertensive</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true"></a><span class="st">Primary: SBP change at week 12</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true"></a><span class="st">Secondary: DBP change, response rate (SBP&lt;140)</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true"></a><span class="st">Covariates: baseline SBP, age, BMI</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true"></a><span class="st">Sample: n=75 per group</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true"></a><span class="st">Recommend primary analysis approach</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true"></a><span class="st">&quot;</span>)</span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;=== DESIGN ===</span><span class="ch">\n</span><span class="st">&quot;</span>, design, <span class="st">&quot;</span><span class="ch">\n\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt; === DESIGN ===
 #&gt;  ## Primary Analysis Approach Recommendation:
 #&gt; 
@@ -2807,53 +2805,57 @@ div.tocify {
 #&gt; 
 #&gt; * **Normality:** The change in SBP at week 12 within each treatment group is approximately normally distributed. (Assess with histograms, Q-Q plots).
 #&gt; * **Homogeneity of Variance:** The variance of the change in SBP at week 12 is approximately equal across the three treatment groups. (Assess with Levene&#39;s test).
-#&gt; * **Linearity:** The relationship between the treatment group and the change in SBP at week 12 is linear. (Assess with residual plots).
-#&gt; * **Independence:** The change in SBP at week 12 for individuals within and between groups are independent.
+#&gt; * **Linearity:** The relationship between the covariate (baseline SBP) and the outcome (change in SBP) is approximately linear within each treatment group. (Assess with scatter plots).
+#&gt; * **Independence:** The change in SBP at week 12 for one participant does not influence the change in SBP for other participants. (Assumed with proper study design).
 #&gt; 
 #&gt; **Rationale:**
 #&gt; 
-#&gt; ANCOVA is appropriate for comparing means (change in SBP) across multiple groups when there are known or suspected covariates that may influence the outcome. In this case, baseline SBP, age, and BMI are potential confounders. 
+#&gt; ANCOVA is appropriate for comparing means of a continuous outcome (change in SBP) across multiple groups (three doses) while controlling for the influence of potential confounding variables (covariates: baseline SBP, age, BMI). 
 #&gt; 
-#&gt; **Model:**
+#&gt; * **Controls for Confounding:** By including the covariates in the model, we can adjust for differences between the groups that are not attributable to the treatment.
+#&gt; * **Handles Continuous Outcome:** ANCOVA is designed for continuous outcome variables like SBP change.
+#&gt; * **Provides Statistical Power:** Including covariates can increase the statistical power of the analysis by reducing unexplained variance.
+#&gt; 
+#&gt; **Statistical Model:**
 #&gt; 
 #&gt; The ANCOVA model would be:
 #&gt; 
-#&gt; `Change in SBP at week 12 = Group (Treatment Dose) + Covariates (Baseline SBP, Age, BMI) + Error`
+#&gt; `Change in SBP at week 12 = Treatment Group + Baseline SBP + Age + BMI + Error`
 #&gt; 
 #&gt; **Interpretation:**
 #&gt; 
-#&gt; The ANCOVA will allow us to determine if there are statistically significant differences in the mean change in SBP at week 12 between the three treatment groups, *after adjusting for* the effects of the covariates. 
+#&gt; The analysis will estimate the mean change in SBP at week 12 for each treatment group, adjusted for the effects of the covariates. We can then compare the adjusted means to determine if there are statistically significant differences in SBP change between the doses.
 #&gt; 
-#&gt; **Additional Considerations:**
+#&gt; **Further Considerations:**
 #&gt; 
-#&gt; * **Interaction Terms:** Consider including interaction terms between the treatment group and the covariates to assess if the effect of the treatment differs based on baseline characteristics.
+#&gt; * **Interaction Terms:** Consider including interaction terms between the treatment group and the covariates if there&#39;s a theoretical reason to believe the treatment effect might differ based on baseline SBP, age, or BMI.
 #&gt; * **Missing Data:** Implement appropriate methods for handling missing data (e.g., multiple imputation).
-#&gt; * **Software:** Utilize statistical software (e.g., R, SAS, SPSS) to perform the ANCOVA.
+#&gt; * **Software:** This analysis can be performed using statistical software packages like R (e.g., `aov` function), SAS, or SPSS.
 #&gt; 
 #&gt; 
 #&gt; 
-#&gt; **Note:** This recommendation is based on the provided information. A more detailed analysis plan may be required after further exploration of the data.
+#&gt; **Disclaimer:** This recommendation is based on the provided information and general statistical principles. A thorough discussion with a statistician is recommended to ensure the most appropriate analysis plan for this specific trial.
 #&gt; 
 #&gt; 
 #&gt; 
 #&gt; </code></pre>
-<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true"></a><span class="co"># Step 2: Generate analysis code (use higher token limit for complex code)</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true"></a>code &lt;-<span class="st"> </span><span class="kw">generate_code</span>(<span class="kw">sprintf</span>(<span class="st">&quot;</span></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true"></a><span class="st">Based on this design:</span></span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true"></a><span class="st">%s</span></span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true"></a></span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true"></a><span class="st">Create R code for:</span></span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true"></a><span class="st">1. Data simulation (realistic)</span></span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true"></a><span class="st">2. Primary analysis (ANCOVA)</span></span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true"></a><span class="st">3. Secondary analyses</span></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true"></a><span class="st">4. Table 1</span></span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true"></a><span class="st">5. Publication-quality plots</span></span>
-<span id="cb43-12"><a href="#cb43-12" aria-hidden="true"></a><span class="st">Use tidyverse + emmeans. Well-commented.</span></span>
-<span id="cb43-13"><a href="#cb43-13" aria-hidden="true"></a><span class="st">&quot;</span>, design), <span class="dt">num_predict =</span> <span class="dv">3000</span>)</span>
-<span id="cb43-14"><a href="#cb43-14" aria-hidden="true"></a></span>
-<span id="cb43-15"><a href="#cb43-15" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;=== CODE ===</span><span class="ch">\n</span><span class="st">&quot;</span>, code, <span class="st">&quot;</span><span class="ch">\n\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true"></a><span class="co"># Step 2: Generate analysis code (use higher token limit for complex code)</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true"></a>code &lt;-<span class="st"> </span><span class="kw">generate_code</span>(<span class="kw">sprintf</span>(<span class="st">&quot;</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true"></a><span class="st">Based on this design:</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true"></a><span class="st">%s</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true"></a></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true"></a><span class="st">Create R code for:</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true"></a><span class="st">1. Data simulation (realistic)</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true"></a><span class="st">2. Primary analysis (ANCOVA)</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true"></a><span class="st">3. Secondary analyses</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true"></a><span class="st">4. Table 1</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true"></a><span class="st">5. Publication-quality plots</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true"></a><span class="st">Use tidyverse + emmeans. Well-commented.</span></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true"></a><span class="st">&quot;</span>, design), <span class="dt">num_predict =</span> <span class="dv">3000</span>)</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true"></a></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;=== CODE ===</span><span class="ch">\n</span><span class="st">&quot;</span>, code, <span class="st">&quot;</span><span class="ch">\n\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt; === CODE ===
-#&gt;  Certainly! Below is a comprehensive R script that includes data simulation, primary analysis using ANCOVA, secondary analyses, and the creation of publication-quality plots.
+#&gt;  Certainly! Below is a comprehensive R script that simulates data, performs the primary analysis using ANCOVA, conducts secondary analyses, generates a table of descriptive statistics (Table 1), and creates publication-quality plots.
 #&gt; 
 #&gt; ### Step 1: Data Simulation
 #&gt; 
@@ -2866,22 +2868,25 @@ div.tocify {
 #&gt; set.seed(123)
 #&gt; 
 #&gt; # Simulate data
-#&gt; n &lt;- 100  # Number of subjects per group
-#&gt; groups &lt;- rep(c(&quot;Low&quot;, &quot;Medium&quot;, &quot;High&quot;), each = n)  # Treatment groups
-#&gt; baseline_sbp &lt;- c(rnorm(n, mean = 140, sd = 15), rnorm(n, mean = 135, sd = 15), rnorm(n, mean = 130, sd = 15))  # Baseline SBP
-#&gt; age &lt;- c(rnorm(n, mean = 60, sd = 10), rnorm(n, mean = 62, sd = 10), rnorm(n, mean = 64, sd = 10))  # Age
-#&gt; bmi &lt;- c(rnorm(n, mean = 25, sd = 3), rnorm(n, mean = 27, sd = 3), rnorm(n, mean = 29, sd = 3))  # BMI
+#&gt; n &lt;- 100  # Number of participants per group
+#&gt; treatment_groups &lt;- c(&quot;Low&quot;, &quot;Medium&quot;, &quot;High&quot;)
+#&gt; baseline_sbp &lt;- rnorm(n * length(treatment_groups), mean = 140, sd = 15)
+#&gt; age &lt;- rnorm(n * length(treatment_groups), mean = 60, sd = 10)
+#&gt; bmi &lt;- rnorm(n * length(treatment_groups), mean = 25, sd = 3)
 #&gt; 
 #&gt; # Simulate change in SBP at week 12
-#&gt; change_sbp &lt;- c(rnorm(n, mean = -5, sd = 10), rnorm(n, mean = -10, sd = 10), rnorm(n, mean = -15, sd = 10))
+#&gt; change_in_sbp &lt;- rnorm(n * length(treatment_groups), mean = 0, sd = 10) +
+#&gt;                  5 * (treatment_groups == &quot;Low&quot;) + 
+#&gt;                  10 * (treatment_groups == &quot;Medium&quot;) + 
+#&gt;                  15 * (treatment_groups == &quot;High&quot;)
 #&gt; 
 #&gt; # Create data frame
 #&gt; data &lt;- data.frame(
-#&gt;   Group = groups,
+#&gt;   Treatment = rep(treatment_groups, each = n),
 #&gt;   Baseline_SBP = baseline_sbp,
 #&gt;   Age = age,
 #&gt;   BMI = bmi,
-#&gt;   Change_SBP = change_sbp
+#&gt;   Change_in_SBPs = change_in_sbp
 #&gt; )
 #&gt; 
 #&gt; # View the first few rows of the data
@@ -2892,61 +2897,46 @@ div.tocify {
 #&gt; 
 #&gt; ```r
 #&gt; # Fit ANCOVA model
-#&gt; ancova_model &lt;- lm(Change_SBP ~ Group + Baseline_SBP + Age + BMI, data = data)
+#&gt; ancova_model &lt;- lm(Change_in_SBPs ~ Treatment + Baseline_SBP + Age + BMI, data = data)
 #&gt; 
 #&gt; # Summary of the model
 #&gt; summary(ancova_model)
 #&gt; 
-#&gt; # Check assumptions
-#&gt; par(mfrow = c(2, 2))
-#&gt; hist(data$Change_SBP, main = &quot;Histogram of Change in SBP&quot;, xlab = &quot;Change in SBP&quot;)
-#&gt; qqnorm(data$Change_SBP, main = &quot;Q-Q Plot of Change in SBP&quot;)
-#&gt; shapiro.test(data$Change_SBP)
-#&gt; 
-#&gt; # Levene&#39;s test for homogeneity of variance
-#&gt; library(car)
-#&gt; leveneTest(Change_SBP ~ Group, data = data)
-#&gt; 
-#&gt; # Residual plots
-#&gt; plot(ancova_model, which = 1:2)
+#&gt; # Perform post-hoc comparisons using emmeans
+#&gt; emm_results &lt;- emmeans(ancova_model, pairwise ~ Treatment)
+#&gt; pairs(emm_results)
 #&gt; ```
 #&gt; 
 #&gt; ### Step 3: Secondary Analyses
 #&gt; 
 #&gt; ```r
-#&gt; # Interaction terms between treatment group and covariates
-#&gt; ancova_interaction &lt;- lm(Change_SBP ~ Group * Baseline_SBP + Age + BMI, data = data)
+#&gt; # Interaction terms between treatment and covariates
+#&gt; interaction_model &lt;- lm(Change_in_SBPs ~ Treatment * Baseline_SBP + Age + BMI, data = data)
 #&gt; 
 #&gt; # Summary of the interaction model
-#&gt; summary(ancova_interaction)
+#&gt; summary(interaction_model)
 #&gt; 
-#&gt; # Check assumptions for interaction model
-#&gt; par(mfrow = c(2, 2))
-#&gt; hist(data$Change_SBP, main = &quot;Histogram of Change in SBP&quot;, xlab = &quot;Change in SBP&quot;)
-#&gt; qqnorm(data$Change_SBP, main = &quot;Q-Q Plot of Change in SBP&quot;)
-#&gt; shapiro.test(data$Change_SBP)
-#&gt; 
-#&gt; # Levene&#39;s test for homogeneity of variance
-#&gt; leveneTest(Change_SBP ~ Group * Baseline_SBP, data = data)
-#&gt; 
-#&gt; # Residual plots
-#&gt; plot(ancova_interaction, which = 1:2)
+#&gt; # Perform post-hoc comparisons for interaction terms
+#&gt; emm_interaction_results &lt;- emmeans(interaction_model, pairwise ~ Treatment | Baseline_SBP)
+#&gt; pairs(emm_interaction_results)
 #&gt; ```
 #&gt; 
-#&gt; ### Step 4: Table 1
+#&gt; ### Step 4: Table 1 (Descriptive Statistics)
 #&gt; 
 #&gt; ```r
-#&gt; # Summary statistics for each group
+#&gt; # Descriptive statistics table
 #&gt; table_1 &lt;- data %&gt;%
-#&gt;   group_by(Group) %&gt;%
+#&gt;   group_by(Treatment) %&gt;%
 #&gt;   summarise(
 #&gt;     n = n(),
-#&gt;     mean_baseline_sbp = mean(Baseline_SBP),
-#&gt;     sd_baseline_sbp = sd(Baseline_SBP),
-#&gt;     mean_age = mean(Age),
-#&gt;     sd_age = sd(Age),
-#&gt;     mean_bmi = mean(BMI),
-#&gt;     sd_bmi = sd(BMI)
+#&gt;     mean_Baseline_SBP = mean(Baseline_SBP, na.rm = TRUE),
+#&gt;     sd_Baseline_SBP = sd(Baseline_SBP, na.rm = TRUE),
+#&gt;     mean_Age = mean(Age, na.rm = TRUE),
+#&gt;     sd_Age = sd(Age, na.rm = TRUE),
+#&gt;     mean_BMI = mean(BMI, na.rm = TRUE),
+#&gt;     sd_BMI = sd(BMI, na.rm = TRUE),
+#&gt;     mean_Change_in_SBPs = mean(Change_in_SBPs, na.rm = TRUE),
+#&gt;     sd_Change_in_SBPs = sd(Change_in_SBPs, na.rm = TRUE)
 #&gt;   )
 #&gt; 
 #&gt; # Print Table 1
@@ -2956,35 +2946,58 @@ div.tocify {
 #&gt; ### Step 5: Publication-Quality Plots
 #&gt; 
 #&gt; ```r
-#&gt; # Boxplot of change in SBP by group, adjusted for covariates
-#&gt; ggplot(data, aes(x = Group, y = Change_SBP)) +
+#&gt; # Boxplot of change in SBP by treatment group
+#&gt; ggplot(data, aes(x = Treatment, y = Change_in_SBPs)) +
 #&gt;   geom_boxplot() +
 #&gt;   labs(title = &quot;Change in SBP at Week 12 by Treatment Group&quot;,
 #&gt;        x = &quot;Treatment Group&quot;,
 #&gt;        y = &quot;Change in SBP&quot;) +
 #&gt;   theme_minimal()
 #&gt; 
-#&gt; # Interaction plot
-#&gt; interaction_plot(data$Group, data$Baseline_SBP, data$Change_SBP,
-#&gt;                  fun = mean, type = &quot;response&quot;, lwd = 2)
+#&gt; # Scatter plot of change in SBP vs. baseline SBP
+#&gt; ggplot(data, aes(x = Baseline_SBP, y = Change_in_SBPs)) +
+#&gt;   geom_point() +
+#&gt;   facet_wrap(~ Treatment) +
+#&gt;   labs(title = &quot;Change in SBP at Week 12 by Baseline SBP&quot;,
+#&gt;        x = &quot;Baseline SBP&quot;,
+#&gt;        y = &quot;Change in SBP&quot;) +
+#&gt;   theme_minimal()
+#&gt; 
+#&gt; # Scatter plot of change in SBP vs. age
+#&gt; ggplot(data, aes(x = Age, y = Change_in_SBPs)) +
+#&gt;   geom_point() +
+#&gt;   facet_wrap(~ Treatment) +
+#&gt;   labs(title = &quot;Change in SBP at Week 12 by Age&quot;,
+#&gt;        x = &quot;Age&quot;,
+#&gt;        y = &quot;Change in SBP&quot;) +
+#&gt;   theme_minimal()
+#&gt; 
+#&gt; # Scatter plot of change in SBP vs. BMI
+#&gt; ggplot(data, aes(x = BMI, y = Change_in_SBPs)) +
+#&gt;   geom_point() +
+#&gt;   facet_wrap(~ Treatment) +
+#&gt;   labs(title = &quot;Change in SBP at Week 12 by BMI&quot;,
+#&gt;        x = &quot;BMI&quot;,
+#&gt;        y = &quot;Change in SBP&quot;) +
+#&gt;   theme_minimal()
 #&gt; ```
 #&gt; 
 #&gt; ### Notes:
-#&gt; 1. **Data Simulation:** The simulation assumes a normal distribution for baseline SBP, age, BMI, and change in SBP at week 12.
-#&gt; 2. **Primary Analysis:** ANCOVA is used to compare the means of change in SBP across treatment groups while adjusting for covariates.
-#&gt; 3. **Secondary Analyses:** Interaction terms are included to assess if the effect of the treatment differs based on baseline characteristics.
-#&gt; 4. **Table 1:** Summary statistics for each group are presented.
-#&gt; 5. **Publication-Quality Plots:** Boxplots and interaction plots are created using `ggplot2`.
+#&gt; - The data simulation is based on realistic assumptions about the distribution of baseline variables and change in SBP.
+#&gt; - The ANCOVA model controls for baseline SBP, age, and BMI to estimate the treatment effect.
+#&gt; - Secondary analyses include interaction terms between treatment and covariates.
+#&gt; - Descriptive statistics are presented in Table 1.
+#&gt; - Publication-quality plots are created using `ggplot2`.
 #&gt; 
-#&gt; This script provides a comprehensive approach to analyzing the data, including simulation, primary analysis, secondary analyses, table creation, and plot generation.</code></pre>
-<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true"></a><span class="co"># Step 3: Generate reporting template (also needs more tokens)</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true"></a>report &lt;-<span class="st"> </span><span class="kw">generate_code</span>(<span class="st">&quot;</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true"></a><span class="st">Create R Markdown template for reporting the analysis above.</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true"></a><span class="st">Include: Methods section, Results section with inline R code,</span></span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true"></a><span class="st">Tables and figures. Follow CONSORT style.</span></span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true"></a><span class="st">&quot;</span>, <span class="dt">num_predict =</span> <span class="dv">2500</span>)</span>
-<span id="cb45-7"><a href="#cb45-7" aria-hidden="true"></a></span>
-<span id="cb45-8"><a href="#cb45-8" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;=== REPORT TEMPLATE ===</span><span class="ch">\n</span><span class="st">&quot;</span>, report, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+#&gt; This script provides a comprehensive approach to analyzing your data using ANCOVA and related techniques. Adjustments may be needed based on the specific characteristics of your dataset.</code></pre>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true"></a><span class="co"># Step 3: Generate reporting template (also needs more tokens)</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true"></a>report &lt;-<span class="st"> </span><span class="kw">generate_code</span>(<span class="st">&quot;</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true"></a><span class="st">Create R Markdown template for reporting the analysis above.</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true"></a><span class="st">Include: Methods section, Results section with inline R code,</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true"></a><span class="st">Tables and figures. Follow CONSORT style.</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true"></a><span class="st">&quot;</span>, <span class="dt">num_predict =</span> <span class="dv">2500</span>)</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true"></a></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true"></a><span class="kw">cat</span>(<span class="st">&quot;=== REPORT TEMPLATE ===</span><span class="ch">\n</span><span class="st">&quot;</span>, report, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>#&gt; === REPORT TEMPLATE ===
 #&gt;  Certainly! Below is an example of an R Markdown template that follows the CONSORT (Consolidated Standards of Reporting Trials) guidelines. This template includes sections for Methods, Results, Tables, and Figures.
 #&gt; 
@@ -3019,11 +3032,11 @@ div.tocify {
 #&gt; 
 #&gt; ### Data Collection
 #&gt; 
-#&gt; Describe how data were collected, including any tools or instruments used.
+#&gt; Describe how data were collected, including tools, procedures, and timing.
 #&gt; 
 #&gt; ### Analysis
 #&gt; 
-#&gt; Detail the statistical methods used to analyze the data. Include information on software used and any assumptions made.
+#&gt; Detail the statistical methods used to analyze the data. Include any software or packages used.
 #&gt; 
 #&gt; ## Results
 #&gt; 
@@ -3059,11 +3072,11 @@ div.tocify {
 #&gt; 
 #&gt; ## Discussion
 #&gt; 
-#&gt; Interpret the results in the context of the research question or hypothesis. Discuss any limitations and implications of the findings.
+#&gt; Interpret the results in the context of the research question or hypothesis. Discuss any limitations and implications.
 #&gt; 
 #&gt; ## Conclusion
 #&gt; 
-#&gt; Summarize the key findings and their significance.
+#&gt; Summarize the findings and their significance.
 #&gt; 
 #&gt; ## References
 #&gt; 
@@ -3072,7 +3085,7 @@ div.tocify {
 #&gt; 
 #&gt; ### Notes:
 #&gt; 1. **Data Path**: Replace `&quot;path_to_your_data.csv&quot;` with the actual path to your data file.
-#&gt; 2. **Software**: Ensure you have the necessary R packages installed (`dplyr`, `ggplot2`, etc.) before running the code chunks.
+#&gt; 2. **Software and Packages**: Ensure you have the necessary packages installed (`dplyr` and `ggplot2` in this example).
 #&gt; 3. **Tables and Figures**: Customize the tables and figures based on your specific analysis.
 #&gt; 
 #&gt; This template provides a structured approach to reporting your analysis following CONSORT guidelines, ensuring clarity and completeness in your report.</code></pre>
@@ -3090,7 +3103,7 @@ div.tocify {
 language models. Journal of Open Source Software, 10(105), 7211. 
 https://doi.org/10.21105/joss.07211</code></pre>
 <hr />
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true"></a><span class="kw">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true"></a><span class="kw">sessionInfo</span>()</span></code></pre></div>
 <pre><code>#&gt; R version 4.1.2 (2021-11-01)
 #&gt; Platform: x86_64-pc-linux-gnu (64-bit)
 #&gt; Running under: Pop!_OS 22.04 LTS

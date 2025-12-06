@@ -304,7 +304,7 @@ print(results)
 Get responses in structured format:
 
 ```{r structured, eval=run_llm}
-# Define schema
+# Define schema (JSON schema as R list)
 analysis_schema <- list(
   type = "object",
   properties = list(
@@ -313,22 +313,23 @@ analysis_schema <- list(
     r_function = list(type = "string"),
     interpretation = list(type = "string")
   ),
-  required = c("test_name", "assumptions", "r_function")
+  required = list("test_name", "assumptions", "r_function")
 )
 
-# Get structured response
+# Get structured response (use output = "structured")
 result <- chat(
   "qwen2.5-coder:7b",
-  create_message("Recommend test for comparing 3 groups with ordinal outcome (5-point scale)"),
+  create_message("Recommend a statistical test for comparing 3 independent groups with an ordinal outcome (5-point Likert scale). Return the test name, key assumptions, R function to use, and interpretation guidance."),
   format = analysis_schema,
-  output = "jsonlist"
+  output = "structured"
 )
 
-# Access fields
+# Access fields from the structured response
 cat("Test:", result$test_name, "\n")
 cat("Function:", result$r_function, "\n")
 cat("\nAssumptions:\n")
 for(a in result$assumptions) cat("  -", a, "\n")
+cat("\nInterpretation:\n", result$interpretation, "\n")
 ```
 
 ---
