@@ -90,14 +90,14 @@ Generate analysis code with proper parameters:
 
 ```{r codegen, eval=run_llm}
 # Code generation function
-generate_code <- function(prompt, model = "qwen2.5-coder:7b") {
+# Note: avoid stop sequences when generating code with markdown formatting
+generate_code <- function(prompt, model = "qwen2.5-coder:7b", num_predict = 2000) {
   generate(
     model,
     prompt,
     temperature = 0.2,      # Low for deterministic code
     top_p = 0.3,
-    num_predict = 1500,
-    stop = c("```", "# END"),
+    num_predict = num_predict,
     output = "text"
   )
 }
@@ -447,17 +447,20 @@ Question: Should I transform outcome? How to report?
 
 ```{r params}
 # Task-specific parameters (pass directly to functions)
-# Code generation: low temperature for deterministic output
-# generate(..., temperature = 0.2, top_p = 0.3, num_predict = 1500)
+# Code generation: low temp, high tokens for complete output
+# generate(..., temperature = 0.2, top_p = 0.3, num_predict = 2000-3000)
 
 # Reasoning: moderate temperature
-# generate(..., temperature = 0.4, top_p = 0.5, num_predict = 1000)
+# generate(..., temperature = 0.4, top_p = 0.5, num_predict = 1500)
 
-# Creative: higher temperature
-# generate(..., temperature = 0.6, top_p = 0.7, num_predict = 1200)
+# Quick answers: lower tokens
+# generate(..., temperature = 0.3, num_predict = 500-1000)
+
+# Complex tasks (full analysis): use higher num_predict to avoid truncation
+# generate(..., temperature = 0.2, num_predict = 3000)
 
 # Example usage
-generate("qwen2.5-coder:7b", "...", temperature = 0.2, num_predict = 1500, output = "text")
+generate("qwen2.5-coder:7b", "...", temperature = 0.2, num_predict = 2000, output = "text")
 ```
 
 ---
@@ -501,7 +504,7 @@ Recommend primary analysis approach
 ")
 cat("=== DESIGN ===\n", design, "\n\n")
 
-# Step 2: Generate analysis code
+# Step 2: Generate analysis code (use higher token limit for complex code)
 code <- generate_code(sprintf("
 Based on this design:
 %s
@@ -513,16 +516,16 @@ Create R code for:
 4. Table 1
 5. Publication-quality plots
 Use tidyverse + emmeans. Well-commented.
-", design))
+", design), num_predict = 3000)
 
 cat("=== CODE ===\n", code, "\n\n")
 
-# Step 3: Generate reporting template
+# Step 3: Generate reporting template (also needs more tokens)
 report <- generate_code("
 Create R Markdown template for reporting the analysis above.
 Include: Methods section, Results section with inline R code,
 Tables and figures. Follow CONSORT style.
-")
+", num_predict = 2500)
 
 cat("=== REPORT TEMPLATE ===\n", report, "\n")
 ```
