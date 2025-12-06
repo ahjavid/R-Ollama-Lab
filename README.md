@@ -1,5 +1,7 @@
 # R-Ollama-Lab
 
+📖 **[View the Interactive Guide](https://ahjavid.github.io/R-Ollama-Lab/)**
+
 A practical guide for using local LLMs with R for biostatistics and data analysis using the [ollamar](https://hauselin.github.io/ollama-r/) package.
 
 ## Overview
