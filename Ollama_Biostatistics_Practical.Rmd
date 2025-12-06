@@ -35,7 +35,7 @@ test_connection()  # Should show "Ollama server is running"
 
 # Pull your models (one-time setup)
 pull("qwen2.5-coder:7b")       # Best for R code generation
-pull("ministral-3:8b")         # Best for complex reasoning
+pull("gemma3n:e4b")         # Best for complex reasoning
 pull("llama3.2:3b")            # Fast general-purpose
 ```
 
@@ -47,7 +47,7 @@ pull("llama3.2:3b")            # Fast general-purpose
 | `qwen2.5-coder:3b` | 1.9GB | Quick questions | ⚡⚡⚡ |
 | `gemma3n:e4b` | 7.5GB | Complex reasoning | ⚡⚡ |
 | `qwen3-vl:8b` | 6.1GB | Vision, plot critique | ⚡⚡ |
-| `ministral-3:8b` | 6.0GB | Study design, reasoning | ⚡⚡ |
+| `gemma3n:e4b` | 6.0GB | Study design, reasoning | ⚡⚡ |
 | `llama3.2:3b` | 2.0GB | Explanations | ⚡⚡⚡ |
 | `mxbai-embed-large` | 669MB | Literature search | ⚡⚡⚡ |
 
@@ -66,13 +66,13 @@ library(ollamar)
 expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions."
 
 # Query function
-ask_expert <- function(question, model = "ministral-3:8b") {
+ask_expert <- function(question, model = "gemma3n:e4b") {
   msgs <- create_messages(
     create_message(expert_prompt, role = "system"),
     create_message(question)
   )
   chat(model, msgs, 
-       options = list(temperature = 0.3, num_predict = 800),
+       temperature = 0.3, num_predict = 800,
        output = "text")
 }
 
@@ -94,12 +94,10 @@ generate_code <- function(prompt, model = "qwen2.5-coder:7b") {
   generate(
     model,
     prompt,
-    options = list(
-      temperature = 0.2,      # Low for deterministic code
-      top_p = 0.3,
-      num_predict = 1500,
-      stop = c("```", "# END")
-    ),
+    temperature = 0.2,      # Low for deterministic code
+    top_p = 0.3,
+    num_predict = 1500,
+    stop = c("```", "# END"),
     output = "text"
   )
 }
@@ -129,21 +127,20 @@ conv <- create_messages(
 )
 
 # Step 1: Get approach
-step1 <- chat("ministral-3:8b", conv, output = "text")
+step1 <- chat("gemma3n:e4b", conv, output = "text")
 cat("=== APPROACH ===\n", step1, "\n\n")
 
 # Step 2: Add details, continue conversation
-conv <- append_message(conv, create_message(step1, role = "assistant"))
-conv <- append_message(conv, create_message(
-  "Primary endpoint: Change in SBP at 12 weeks. Baseline SBP ~145mmHg (SD=15). n=300 total."
-))
+conv <- append_message(step1, role = "assistant", x = conv)
+conv <- append_message("Primary endpoint: Change in SBP at 12 weeks. Baseline SBP ~145mmHg (SD=15). n=300 total.", 
+                       role = "user", x = conv)
 
-step2 <- chat("ministral-3:8b", conv, output = "text")
+step2 <- chat("gemma3n:e4b", conv, output = "text")
 cat("=== DETAILED PLAN ===\n", step2, "\n\n")
 
 # Step 3: Get code (switch to code model)
-conv <- append_message(conv, create_message(step2, role = "assistant"))
-conv <- append_message(conv, create_message("Provide complete R code for this analysis"))
+conv <- append_message(step2, role = "assistant", x = conv)
+conv <- append_message("Provide complete R code for this analysis", role = "user", x = conv)
 
 code <- chat("qwen2.5-coder:7b", conv, output = "text")
 cat("=== CODE ===\n", code, "\n")
@@ -243,7 +240,7 @@ questions <- c(
 # Create parallel requests (fast model)
 reqs <- lapply(questions, function(q) {
   generate("qwen2.5-coder:3b", q, 
-           options = list(temperature = 0.3, num_predict = 300),
+           temperature = 0.3, num_predict = 300,
            output = "req")
 })
 
@@ -344,7 +341,7 @@ Reusable utilities for your workflow:
 # Quick consultation
 quick_ask <- function(question, model = "llama3.2:3b") {
   generate(model, question, 
-           options = list(temperature = 0.3, num_predict = 500),
+           temperature = 0.3, num_predict = 500,
            output = "text")
 }
 
@@ -365,7 +362,7 @@ safe_codegen <- function(prompt, model = "qwen2.5-coder:7b", max_retry = 3) {
 }
 
 # Multi-model consensus
-get_consensus <- function(question, models = c("ministral-3:8b", "qwen2.5-coder:7b")) {
+get_consensus <- function(question, models = c("gemma3n:e4b", "qwen2.5-coder:7b")) {
   results <- lapply(models, function(m) {
     cat(sprintf("\n=== %s ===\n", m))
     resp <- quick_ask(question, m)
@@ -425,7 +422,7 @@ code <- generate_code("Create t-test function")
 # eval(parse(text = code))
 
 # Cross-check statistical advice
-advice1 <- ask_expert("...", "ministral-3:8b")
+advice1 <- ask_expert("...", "gemma3n:e4b")
 advice2 <- ask_expert("...", "qwen2.5-coder:7b")
 # Compare responses
 ```
@@ -449,13 +446,18 @@ Question: Should I transform outcome? How to report?
 ## 3. Optimize Parameters
 
 ```{r params}
-# Task-specific parameters
-code_opts <- list(temperature = 0.2, top_p = 0.3, num_predict = 1500)
-reasoning_opts <- list(temperature = 0.4, top_p = 0.5, num_predict = 1000)
-creative_opts <- list(temperature = 0.6, top_p = 0.7, num_predict = 1200)
+# Task-specific parameters (pass directly to functions)
+# Code generation: low temperature for deterministic output
+# generate(..., temperature = 0.2, top_p = 0.3, num_predict = 1500)
 
-# Use in functions
-generate("qwen2.5-coder:7b", "...", options = code_opts, output = "text")
+# Reasoning: moderate temperature
+# generate(..., temperature = 0.4, top_p = 0.5, num_predict = 1000)
+
+# Creative: higher temperature
+# generate(..., temperature = 0.6, top_p = 0.7, num_predict = 1200)
+
+# Example usage
+generate("qwen2.5-coder:7b", "...", temperature = 0.2, num_predict = 1500, output = "text")
 ```
 
 ---
@@ -478,7 +480,7 @@ generate("qwen2.5-coder:3b", "...", output = "text")
 # Slow performance
 # Reduce output length:
 generate("llama3.2:3b", "...", 
-         options = list(num_predict = 500), output = "text")
+         num_predict = 500, output = "text")
 ```
 
 ---
