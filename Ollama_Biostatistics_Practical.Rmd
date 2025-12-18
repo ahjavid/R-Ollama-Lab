@@ -250,25 +250,43 @@ Get expert advice on methods and tests:
 library(ollamar)
 
 # Setup: System prompt for biostatistics expert
-expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions. Use markdown formatting but avoid using # headers."
+expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions. Use markdown formatting but avoid using # headers - use **bold** for section titles instead."
 
 # Helper function to sanitize LLM output - convert markdown headers to styled text
 # This prevents headers from becoming document sections
+# IMPORTANT: Preserves code blocks (```...```) without modification
 sanitize_llm_output <- function(text) {
-  # Convert markdown headers to bold styled paragraphs
-  # #### Header -> <p class='llm-h4'><strong>Header</strong></p>
-  text <- gsub("^####\\s*(.+)$", "<p class='llm-h4'><strong>\\1</strong></p>", text, perl = TRUE)
-  text <- gsub("\n####\\s*(.+)", "\n<p class='llm-h4'><strong>\\1</strong></p>", text, perl = TRUE)
-  # ### Header -> <p class='llm-h3'><strong>Header</strong></p>
-  text <- gsub("^###\\s*(.+)$", "<p class='llm-h3'><strong>\\1</strong></p>", text, perl = TRUE)
-  text <- gsub("\n###\\s*(.+)", "\n<p class='llm-h3'><strong>\\1</strong></p>", text, perl = TRUE)
-  # ## Header -> <p class='llm-h2'><strong>Header</strong></p>
-  text <- gsub("^##\\s*(.+)$", "<p class='llm-h2'><strong>\\1</strong></p>", text, perl = TRUE)
-  text <- gsub("\n##\\s*(.+)", "\n<p class='llm-h2'><strong>\\1</strong></p>", text, perl = TRUE)
-  # # Header -> <p class='llm-h1'><strong>Header</strong></p>
-  text <- gsub("^#\\s*(.+)$", "<p class='llm-h1'><strong>\\1</strong></p>", text, perl = TRUE)
-  text <- gsub("\n#\\s*(.+)", "\n<p class='llm-h1'><strong>\\1</strong></p>", text, perl = TRUE)
-  return(text)
+  # Split text by code blocks to preserve them
+  # Pattern matches ```language\n...``` blocks
+  parts <- strsplit(text, "(```[a-zA-Z]*\\n[\\s\\S]*?```)", perl = TRUE)[[1]]
+  code_blocks <- gregexpr("```[a-zA-Z]*\\n[\\s\\S]*?```", text, perl = TRUE)
+  matches <- regmatches(text, code_blocks)[[1]]
+  
+  # Function to convert headers in non-code text
+  convert_headers <- function(txt) {
+    # Only convert headers at start of line (not # comments in code)
+    # Must have space after # and be on its own line
+    txt <- gsub("(^|\\n)####\\s+([^\\n]+)", "\\1<p class='llm-h4'><strong>\\2</strong></p>", txt, perl = TRUE)
+    txt <- gsub("(^|\\n)###\\s+([^\\n]+)", "\\1<p class='llm-h3'><strong>\\2</strong></p>", txt, perl = TRUE)
+    txt <- gsub("(^|\\n)##\\s+([^\\n]+)", "\\1<p class='llm-h2'><strong>\\2</strong></p>", txt, perl = TRUE)
+    txt <- gsub("(^|\\n)#\\s+([^\\n]+)", "\\1<p class='llm-h1'><strong>\\2</strong></p>", txt, perl = TRUE)
+    return(txt)
+  }
+  
+  # If no code blocks, just convert headers
+  if (length(matches) == 0) {
+    return(convert_headers(text))
+  }
+  
+  # Rebuild text: convert headers in non-code parts, keep code blocks as-is
+  result <- ""
+  for (i in seq_along(parts)) {
+    result <- paste0(result, convert_headers(parts[i]))
+    if (i <= length(matches)) {
+      result <- paste0(result, matches[i])
+    }
+  }
+  return(result)
 }
 
 # Query function that formats output for R Markdown
