@@ -12,7 +12,15 @@ This repository provides templates and workflows for integrating local Large Lan
 - **R Code Generation** - Generate analysis code with proper parameters
 - **Iterative Analysis Design** - Build complex analyses step-by-step
 - **Literature Search** - Semantic search using embeddings
+- **Structured Outputs** - JSON schema responses for reports
 - **Parallel Processing** - Efficient batch queries
+
+## Features
+
+- 🎨 **Styled LLM Output Boxes** - Clean, visually appealing response formatting
+- 📝 **Markdown Rendering** - LLM responses render with proper formatting (bold, lists, headers)
+- 🔧 **Flexible Helper Functions** - `ask_expert()` and `generate_code()` with customizable parameters
+- 📊 **Real Data Examples** - Hands-on demos using built-in R datasets
 
 ## Prerequisites
 
@@ -26,22 +34,28 @@ This repository provides templates and workflows for integrating local Large Lan
 
 | Model | Size | Best Use | Speed |
 |-------|------|----------|-------|
-| `qwen2.5-coder:7b` | 4.7GB | R code, data analysis | ⚡⚡ |
-| `qwen2.5-coder:3b` | 1.9GB | Quick questions | ⚡⚡⚡ |
-| `gemma3n:e4b` | 7.5GB | Complex reasoning | ⚡⚡ |
-| `qwen3-vl:8b` | 6.1GB | Vision, plot critique | ⚡⚡ |
-| `ministral-3:8b` | 6.0GB | Study design, reasoning | ⚡⚡ |
-| `llama3.2:3b` | 2.0GB | Explanations | ⚡⚡⚡ |
-| `mxbai-embed-large` | 669MB | Literature search | ⚡⚡⚡ |
+| `qwen3:14b` | 9.3GB | R code generation, complex analysis | ⚡⚡ |
+| `gemma3:12b` | 8.1GB | Complex reasoning, study design | ⚡⚡ |
+| `qwen3:4b` | 2.5GB | Quick code questions | ⚡⚡⚡ |
+| `gemma3:4b` | 3.3GB | Fast reasoning, general tasks | ⚡⚡⚡ |
+| `phi4-mini:3.8b` | 2.5GB | Efficient general-purpose | ⚡⚡⚡ |
+| `granite4:3b` | 2.1GB | IBM's enterprise model | ⚡⚡⚡ |
+| `llama3.2:3b` | 2.0GB | Fast explanations, summaries | ⚡⚡⚡ |
+| `nomic-embed-text-v2-moe` | 957MB | Embeddings, semantic search | ⚡⚡⚡ |
+| `mxbai-embed-large` | 669MB | Embeddings, literature search | ⚡⚡⚡ |
 
 ### Pull Models
 
 ```bash
-ollama pull qwen2.5-coder:7b
-ollama pull gemma3n:e4b
-ollama pull qwen3-vl:8b
-ollama pull ministral-3:8b
+# Primary models
+ollama pull qwen3:14b        # Best for R code
+ollama pull gemma3:12b       # Best for reasoning
+
+# Fast alternatives
+ollama pull gemma3:4b
 ollama pull llama3.2:3b
+
+# Embeddings
 ollama pull mxbai-embed-large
 ```
 
@@ -55,6 +69,7 @@ ollama pull mxbai-embed-large
 ## Files
 
 - `Ollama_Biostatistics_Practical.Rmd` - Main practical guide with examples
+- `index.html` - Rendered HTML for GitHub Pages
 
 ## Use Cases
 
@@ -82,10 +97,17 @@ generate_code("Complete PS analysis with MatchIt...")
 
 If you use ollamar, please cite:
 
-```
-Lin, H., & Safi, T. (2025). ollamar: An R package for running large 
-language models. Journal of Open Source Software, 10(105), 7211. 
-https://doi.org/10.21105/joss.07211
+```bibtex
+@article{Lin2025,
+  author = {Lin, Hause and Safi, Tawab},
+  title = {ollamar: An R package for running large language models},
+  journal = {Journal of Open Source Software},
+  volume = {10},
+  number = {105},
+  pages = {7211},
+  year = {2025},
+  doi = {10.21105/joss.07211}
+}
 ```
 
 ## Resources
