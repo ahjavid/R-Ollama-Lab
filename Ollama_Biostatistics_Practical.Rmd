@@ -123,6 +123,30 @@ h2 { color: #667eea; }
   color: #718096;
 }
 
+/* LLM Header Styles (prevent section numbering) */
+.llm-h1 {
+  font-size: 1.4em;
+  color: #2b6cb0;
+  margin: 1em 0 0.5em 0;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid #e2e8f0;
+}
+.llm-h2 {
+  font-size: 1.25em;
+  color: #2b6cb0;
+  margin: 1em 0 0.5em 0;
+}
+.llm-h3 {
+  font-size: 1.1em;
+  color: #4a5568;
+  margin: 0.8em 0 0.4em 0;
+}
+.llm-h4 {
+  font-size: 1em;
+  color: #4a5568;
+  margin: 0.6em 0 0.3em 0;
+}
+
 /* Clean Output Blocks */
 pre:not(.sourceCode) {
   background-color: #f8f9fa;
@@ -226,7 +250,26 @@ Get expert advice on methods and tests:
 library(ollamar)
 
 # Setup: System prompt for biostatistics expert
-expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions. Use markdown formatting."
+expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions. Use markdown formatting but avoid using # headers."
+
+# Helper function to sanitize LLM output - convert markdown headers to styled text
+# This prevents headers from becoming document sections
+sanitize_llm_output <- function(text) {
+  # Convert markdown headers to bold styled paragraphs
+  # #### Header -> <p class='llm-h4'><strong>Header</strong></p>
+  text <- gsub("^####\\s*(.+)$", "<p class='llm-h4'><strong>\\1</strong></p>", text, perl = TRUE)
+  text <- gsub("\n####\\s*(.+)", "\n<p class='llm-h4'><strong>\\1</strong></p>", text, perl = TRUE)
+  # ### Header -> <p class='llm-h3'><strong>Header</strong></p>
+  text <- gsub("^###\\s*(.+)$", "<p class='llm-h3'><strong>\\1</strong></p>", text, perl = TRUE)
+  text <- gsub("\n###\\s*(.+)", "\n<p class='llm-h3'><strong>\\1</strong></p>", text, perl = TRUE)
+  # ## Header -> <p class='llm-h2'><strong>Header</strong></p>
+  text <- gsub("^##\\s*(.+)$", "<p class='llm-h2'><strong>\\1</strong></p>", text, perl = TRUE)
+  text <- gsub("\n##\\s*(.+)", "\n<p class='llm-h2'><strong>\\1</strong></p>", text, perl = TRUE)
+  # # Header -> <p class='llm-h1'><strong>Header</strong></p>
+  text <- gsub("^#\\s*(.+)$", "<p class='llm-h1'><strong>\\1</strong></p>", text, perl = TRUE)
+  text <- gsub("\n#\\s*(.+)", "\n<p class='llm-h1'><strong>\\1</strong></p>", text, perl = TRUE)
+  return(text)
+}
 
 # Query function that formats output for R Markdown
 ask_expert <- function(question, model = "gemma3:12b", show = TRUE) {
@@ -240,7 +283,7 @@ ask_expert <- function(question, model = "gemma3:12b", show = TRUE) {
   # Wrap in a styled div for better presentation
   if (show) {
     cat("\n<div class='llm-output'>\n\n")
-    cat(response)
+    cat(sanitize_llm_output(response))
     cat("\n\n</div>\n")
   }
   invisible(response)
@@ -271,7 +314,7 @@ generate_code <- function(prompt, model = "qwen3:14b", num_predict = 2000, show 
   )
   if (show) {
     cat("\n<div class='llm-output'>\n\n")
-    cat(response)
+    cat(sanitize_llm_output(response))
     cat("\n\n</div>\n")
   }
   invisible(response)
@@ -295,14 +338,14 @@ Build complex analyses step-by-step:
 ```{r iterative, eval=run_llm, results='asis'}
 # Start conversation
 conv <- create_messages(
-  create_message("You are a biostatistics consultant guiding analysis design. Use markdown formatting.", role = "system"),
+  create_message("You are a biostatistics consultant guiding analysis design. Use markdown formatting but avoid using # headers.", role = "system"),
   create_message("Design primary analysis for Phase 3 hypertension trial comparing Drug A vs Placebo")
 )
 
 # Step 1: Get approach
 step1 <- chat("gemma3:12b", conv, output = "text")
-cat("\n### 📋 Analysis Approach\n\n<div class='llm-output'>\n\n")
-cat(step1)
+cat("\n<p class='llm-h2'><strong>📋 Analysis Approach</strong></p>\n\n<div class='llm-output'>\n\n")
+cat(sanitize_llm_output(step1))
 cat("\n\n</div>\n")
 
 # Step 2: Add details, continue conversation
@@ -311,8 +354,8 @@ conv <- append_message("Primary endpoint: Change in SBP at 12 weeks. Baseline SB
                        role = "user", x = conv)
 
 step2 <- chat("gemma3:12b", conv, output = "text")
-cat("\n### 📊 Detailed Plan\n\n<div class='llm-output'>\n\n")
-cat(step2)
+cat("\n<p class='llm-h2'><strong>📊 Detailed Plan</strong></p>\n\n<div class='llm-output'>\n\n")
+cat(sanitize_llm_output(step2))
 cat("\n\n</div>\n")
 
 # Step 3: Get code (switch to code model)
@@ -320,8 +363,8 @@ conv <- append_message(step2, role = "assistant", x = conv)
 conv <- append_message("Provide complete R code for this analysis", role = "user", x = conv)
 
 code <- chat("qwen3:14b", conv, output = "text")
-cat("\n### 💻 Generated Code\n\n<div class='llm-output'>\n\n")
-cat(code)
+cat("\n<p class='llm-h2'><strong>💻 Generated Code</strong></p>\n\n<div class='llm-output'>\n\n")
+cat(sanitize_llm_output(code))
 cat("\n\n</div>\n")
 ```
 
@@ -430,8 +473,8 @@ answers <- lapply(resps, resp_process, "text")
 
 # Display with styled boxes
 for(i in seq_along(questions)) {
-  cat(sprintf("\n**Q%d: %s**\n\n<div class='llm-output'>\n\n%s\n\n</div>\n", 
-              i, questions[i], answers[[i]]))
+  cat(sprintf("\n<p class='llm-h3'><strong>Q%d: %s</strong></p>\n\n<div class='llm-output'>\n\n%s\n\n</div>\n", 
+              i, questions[i], sanitize_llm_output(answers[[i]])))
 }
 ```
 
@@ -541,7 +584,7 @@ sum(mtcars$cyl==4), sum(mtcars$cyl==6), sum(mtcars$cyl==8),
 sum(mtcars$am==0), sum(mtcars$am==1))
 
 # Ask LLM for analysis recommendation
-cat("\n### 📊 Analysis Plan\n")
+cat("\n<p class='llm-h2'><strong>📊 Analysis Plan</strong></p>\n")
 ask_expert(paste0(data_summary, "
 Recommend the appropriate statistical analysis approach. Consider:
 1. Which test/model to use and why
@@ -551,7 +594,7 @@ Recommend the appropriate statistical analysis approach. Consider:
 "))
 
 # Generate analysis code
-cat("\n### 💻 Generated R Code\n")
+cat("\n<p class='llm-h2'><strong>💻 Generated R Code</strong></p>\n")
 generate_code(paste0(data_summary, "
 Write complete R code to:
 1. Visualize the relationship (boxplot of mpg by transmission)
@@ -725,7 +768,7 @@ From design to code:
 
 ```{r complete-example, eval=run_llm, results='asis'}
 # Step 1: Design consultation
-cat("\n### 📋 Step 1: Design Consultation\n")
+cat("\n<p class='llm-h2'><strong>📋 Step 1: Design Consultation</strong></p>\n")
 design <- ask_expert("
 Trial: compare 3 doses of new antihypertensive
 Primary: SBP change at week 12
@@ -735,10 +778,10 @@ Sample: n=75 per group
 Recommend primary analysis approach
 ", show = FALSE)  # Capture without showing
 
-cat("\n<div class='llm-output'>\n\n", design, "\n\n</div>\n")
+cat("\n<div class='llm-output'>\n\n", sanitize_llm_output(design), "\n\n</div>\n")
 
 # Step 2: Generate analysis code (use higher token limit for complex code)
-cat("\n### 💻 Step 2: Analysis Code\n")
+cat("\n<p class='llm-h2'><strong>💻 Step 2: Analysis Code</strong></p>\n")
 generate_code(sprintf("
 Based on this design:
 %s
@@ -753,7 +796,7 @@ Use tidyverse + emmeans. Well-commented.
 ", design), num_predict = 3000)
 
 # Step 3: Generate reporting template (also needs more tokens)
-cat("\n### 📝 Step 3: Report Template\n")
+cat("\n<p class='llm-h2'><strong>📝 Step 3: Report Template</strong></p>\n")
 generate_code("
 Create R Markdown template for reporting the analysis above.
 Include: Methods section, Results section with inline R code,
