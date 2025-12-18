@@ -1,15 +1,95 @@
 ---
 title: "Local LLMs for Biostatistics: Practical Guide"
+subtitle: "Using Ollama + R for Statistical Analysis"
 author: "Amir Javid"
 date: "`r Sys.Date()`"
 output:
   html_document:
     toc: true
-    toc_float: true
-    theme: cosmo
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    theme: flatly
     code_folding: show
     highlight: tango
+    df_print: paged
+    fig_caption: true
+    number_sections: true
 ---
+
+```{css custom-styles, echo=FALSE}
+/* Custom Styling */
+.main-container { max-width: 1100px; }
+
+/* Hero Section */
+.hero-box {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+.hero-box h2 { color: white; margin-top: 0; }
+
+/* Info Boxes */
+.info-box {
+  background-color: #e7f3ff;
+  border-left: 5px solid #2196F3;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-radius: 0 5px 5px 0;
+}
+.tip-box {
+  background-color: #e8f5e9;
+  border-left: 5px solid #4CAF50;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-radius: 0 5px 5px 0;
+}
+.warning-box {
+  background-color: #fff3e0;
+  border-left: 5px solid #FF9800;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-radius: 0 5px 5px 0;
+}
+
+/* Better Code Output */
+pre code {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Model Table Styling */
+.model-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.model-table th {
+  background-color: #667eea;
+  color: white;
+  padding: 12px;
+}
+.model-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+.model-table tr:hover { background-color: #f5f5f5; }
+
+/* Section Headers */
+h1 { border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+h2 { color: #667eea; }
+
+/* Output Styling */
+.llm-output {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  padding: 15px;
+  margin: 10px 0;
+}
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -24,6 +104,23 @@ knitr::opts_chunk$set(
 run_llm <- TRUE  # Change to TRUE to execute LLM calls
 ```
 
+<div class="hero-box">
+<h2>🧬 Bring AI to Your Biostatistics Workflow</h2>
+<p>This guide demonstrates how to use <strong>local Large Language Models</strong> (via Ollama) for statistical consulting, code generation, and analysis design—all running privately on your machine.</p>
+
+**What you'll learn:**
+
+- ✅ Statistical consultation with AI experts
+- ✅ Automated R code generation for complex analyses
+- ✅ Iterative analysis design workflows
+- ✅ Semantic literature search with embeddings
+- ✅ Structured outputs for reproducible reports
+</div>
+
+<div class="info-box">
+**📋 Quick Reference:** Jump to any section using the floating table of contents on the left.
+</div>
+
 # Quick Start
 
 Install Ollama from [ollama.com](https://ollama.com), launch the app, then:
@@ -34,26 +131,33 @@ library(ollamar)
 test_connection()  # Should show "Ollama server is running"
 
 # Pull your models (one-time setup)
-pull("qwen2.5-coder:7b")       # Best for R code generation
-pull("gemma3n:e4b")         # Best for complex reasoning
-pull("llama3.2:3b")            # Fast general-purpose
+pull("qwen3:14b")          # Best for R code generation
+pull("gemma3:12b")         # Best for complex reasoning  
+pull("gemma3:4b")          # Fast general-purpose
+pull("llama3.2:3b")        # Quick explanations
 ```
 
-**Your Available Models:**
+**Available Models:**
 
 | Model | Size | Best Use | Speed |
 |-------|------|----------|-------|
-| `qwen2.5-coder:7b` | 4.7GB | R code, data analysis | ⚡⚡ |
-| `qwen2.5-coder:3b` | 1.9GB | Quick questions | ⚡⚡⚡ |
-| `gemma3n:e4b` | 7.5GB | Complex reasoning | ⚡⚡ |
-| `qwen3-vl:8b` | 6.1GB | Vision, plot critique | ⚡⚡ |
-| `gemma3n:e4b` | 6.0GB | Study design, reasoning | ⚡⚡ |
-| `llama3.2:3b` | 2.0GB | Explanations | ⚡⚡⚡ |
-| `mxbai-embed-large` | 669MB | Literature search | ⚡⚡⚡ |
+| `qwen3:14b` | 9.3GB | R code generation, complex analysis | ⚡⚡ |
+| `gemma3:12b` | 8.1GB | Complex reasoning, study design | ⚡⚡ |
+| `qwen3:4b` | 2.5GB | Quick code questions | ⚡⚡⚡ |
+| `gemma3:4b` | 3.3GB | Fast reasoning, general tasks | ⚡⚡⚡ |
+| `phi4-mini:3.8b` | 2.5GB | Efficient general-purpose | ⚡⚡⚡ |
+| `granite4:3b` | 2.1GB | IBM's enterprise model | ⚡⚡⚡ |
+| `llama3.2:3b` | 2.0GB | Fast explanations, summaries | ⚡⚡⚡ |
+| `nomic-embed-text-v2-moe` | 957MB | Embeddings, semantic search | ⚡⚡⚡ |
+| `mxbai-embed-large` | 669MB | Embeddings, literature search | ⚡⚡⚡ |
 
 ---
 
 # Core Workflow Patterns
+
+<div class="tip-box">
+**💡 Pro Tip:** Each pattern below can be combined. Start with consultation (Pattern 1), then generate code (Pattern 2), and iterate to refine (Pattern 3).
+</div>
 
 ## Pattern 1: Statistical Consultation
 
@@ -66,7 +170,7 @@ library(ollamar)
 expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions."
 
 # Query function
-ask_expert <- function(question, model = "gemma3n:e4b") {
+ask_expert <- function(question, model = "gemma3:12b") {
   msgs <- create_messages(
     create_message(expert_prompt, role = "system"),
     create_message(question)
@@ -91,7 +195,7 @@ Generate analysis code with proper parameters:
 ```{r codegen, eval=run_llm}
 # Code generation function
 # Note: avoid stop sequences when generating code with markdown formatting
-generate_code <- function(prompt, model = "qwen2.5-coder:7b", num_predict = 2000) {
+generate_code <- function(prompt, model = "qwen3:14b", num_predict = 2000) {
   generate(
     model,
     prompt,
@@ -127,7 +231,7 @@ conv <- create_messages(
 )
 
 # Step 1: Get approach
-step1 <- chat("gemma3n:e4b", conv, output = "text")
+step1 <- chat("gemma3:12b", conv, output = "text")
 cat("=== APPROACH ===\n", step1, "\n\n")
 
 # Step 2: Add details, continue conversation
@@ -135,20 +239,24 @@ conv <- append_message(step1, role = "assistant", x = conv)
 conv <- append_message("Primary endpoint: Change in SBP at 12 weeks. Baseline SBP ~145mmHg (SD=15). n=300 total.", 
                        role = "user", x = conv)
 
-step2 <- chat("gemma3n:e4b", conv, output = "text")
+step2 <- chat("gemma3:12b", conv, output = "text")
 cat("=== DETAILED PLAN ===\n", step2, "\n\n")
 
 # Step 3: Get code (switch to code model)
 conv <- append_message(step2, role = "assistant", x = conv)
 conv <- append_message("Provide complete R code for this analysis", role = "user", x = conv)
 
-code <- chat("qwen2.5-coder:7b", conv, output = "text")
+code <- chat("qwen3:14b", conv, output = "text")
 cat("=== CODE ===\n", code, "\n")
 ```
 
 ---
 
 # Practical Biostatistics Examples
+
+<div class="info-box">
+**🎯 Real-World Scenarios:** These examples mirror common biostatistics tasks in clinical trials and observational studies. Each generates complete, runnable R code.
+</div>
 
 ## Sample Size & Power
 
@@ -224,6 +332,10 @@ cat(psm_code)
 
 # Parallel Processing for Efficiency
 
+<div class="warning-box">
+**⚠️ Performance Note:** Parallel requests can speed up batch queries significantly, but monitor your system resources. Ollama loads models into GPU/RAM, so running too many concurrent requests may cause memory issues.
+</div>
+
 Process multiple queries simultaneously:
 
 ```{r parallel, eval=run_llm}
@@ -239,7 +351,7 @@ questions <- c(
 
 # Create parallel requests (fast model)
 reqs <- lapply(questions, function(q) {
-  generate("qwen2.5-coder:3b", q, 
+  generate("gemma3:4b", q, 
            temperature = 0.3, num_predict = 300,
            output = "req")
 })
@@ -318,7 +430,7 @@ analysis_schema <- list(
 
 # Get structured response (use output = "structured")
 result <- chat(
-  "qwen2.5-coder:7b",
+  "qwen3:14b",
   create_message("Recommend a statistical test for comparing 3 independent groups with an ordinal outcome (5-point Likert scale). Return the test name, key assumptions, R function to use, and interpretation guidance."),
   format = analysis_schema,
   output = "structured"
@@ -330,6 +442,58 @@ cat("Function:", result$r_function, "\n")
 cat("\nAssumptions:\n")
 for(a in result$assumptions) cat("  -", a, "\n")
 cat("\nInterpretation:\n", result$interpretation, "\n")
+```
+
+---
+
+# Real Data Example: Complete Analysis
+
+<div class="tip-box">
+**🔬 Hands-On Demo:** This section uses R's built-in `mtcars` dataset to demonstrate a complete LLM-assisted analysis workflow from exploratory analysis to interpretation.
+</div>
+
+```{r real-data-example, eval=run_llm}
+# Load and summarize real data
+data(mtcars)
+
+# Create analysis context for LLM
+data_summary <- sprintf("
+Dataset: mtcars (Motor Trend Car Road Tests)
+Observations: %d cars
+Variables: mpg (fuel efficiency), cyl (cylinders: 4,6,8), hp (horsepower), wt (weight), am (transmission: 0=auto, 1=manual)
+
+Summary statistics:
+- MPG: mean=%.1f, sd=%.1f, range=[%.1f, %.1f]
+- Cylinders: %d four-cyl, %d six-cyl, %d eight-cyl
+- Transmission: %d automatic, %d manual
+
+Research question: Does transmission type (automatic vs manual) affect fuel efficiency (mpg), controlling for weight and horsepower?
+", nrow(mtcars), mean(mtcars$mpg), sd(mtcars$mpg), min(mtcars$mpg), max(mtcars$mpg),
+sum(mtcars$cyl==4), sum(mtcars$cyl==6), sum(mtcars$cyl==8),
+sum(mtcars$am==0), sum(mtcars$am==1))
+
+# Ask LLM for analysis recommendation
+analysis_plan <- ask_expert(paste0(data_summary, "
+Recommend the appropriate statistical analysis approach. Consider:
+1. Which test/model to use and why
+2. Key assumptions to check
+3. Potential confounders
+4. How to interpret results
+"))
+
+cat("=== ANALYSIS PLAN ===\n", analysis_plan, "\n\n")
+
+# Generate analysis code
+analysis_code <- generate_code(paste0(data_summary, "
+Write complete R code to:
+1. Visualize the relationship (boxplot of mpg by transmission)
+2. Fit appropriate model (multiple regression: mpg ~ am + wt + hp)
+3. Check model assumptions (residual plots)
+4. Report results with confidence intervals
+Use base R and keep it concise.
+"))
+
+cat("=== GENERATED CODE ===\n", analysis_code, "\n")
 ```
 
 ---
@@ -347,7 +511,7 @@ quick_ask <- function(question, model = "llama3.2:3b") {
 }
 
 # Safe code generation with retry
-safe_codegen <- function(prompt, model = "qwen2.5-coder:7b", max_retry = 3) {
+safe_codegen <- function(prompt, model = "qwen3:14b", max_retry = 3) {
   for(i in 1:max_retry) {
     result <- tryCatch(
       generate_code(prompt, model),
@@ -363,7 +527,7 @@ safe_codegen <- function(prompt, model = "qwen2.5-coder:7b", max_retry = 3) {
 }
 
 # Multi-model consensus
-get_consensus <- function(question, models = c("gemma3n:e4b", "qwen2.5-coder:7b")) {
+get_consensus <- function(question, models = c("gemma3:12b", "qwen3:14b")) {
   results <- lapply(models, function(m) {
     cat(sprintf("\n=== %s ===\n", m))
     resp <- quick_ask(question, m)
@@ -396,8 +560,8 @@ get_consensus("Should I adjust for baseline in ANCOVA for RCT?")
 ```{r model-selector}
 select_model <- function(task, need_speed = FALSE) {
   switch(task,
-    "code" = if(need_speed) "qwen2.5-coder:3b" else "qwen2.5-coder:7b",
-    "reasoning" = "gemma3n:e4b",
+    "code" = if(need_speed) "gemma3:4b" else "qwen3:14b",
+    "reasoning" = "gemma3:12b",
     "quick" = "llama3.2:3b",
     "vision" = "qwen3-vl:8b",
     "embed" = "mxbai-embed-large",
@@ -423,8 +587,8 @@ code <- generate_code("Create t-test function")
 # eval(parse(text = code))
 
 # Cross-check statistical advice
-advice1 <- ask_expert("...", "gemma3n:e4b")
-advice2 <- ask_expert("...", "qwen2.5-coder:7b")
+advice1 <- ask_expert("...", "gemma3:12b")
+advice2 <- ask_expert("...", "qwen3:14b")
 # Compare responses
 ```
 
@@ -461,7 +625,7 @@ Question: Should I transform outcome? How to report?
 # generate(..., temperature = 0.2, num_predict = 3000)
 
 # Example usage
-generate("qwen2.5-coder:7b", "...", temperature = 0.2, num_predict = 2000, output = "text")
+generate("qwen3:14b", "...", temperature = 0.2, num_predict = 2000, output = "text")
 ```
 
 ---
@@ -475,11 +639,11 @@ test_connection()
 
 # Model not found
 list_models()  # Check what you have
-pull("qwen2.5-coder:7b")  # Pull if missing
+pull("qwen3:14b")  # Pull if missing
 
 # Out of memory
 # Use smaller model:
-generate("qwen2.5-coder:3b", "...", output = "text")
+generate("gemma3:4b", "...", output = "text")
 
 # Slow performance
 # Reduce output length:
@@ -533,22 +697,60 @@ cat("=== REPORT TEMPLATE ===\n", report, "\n")
 
 ---
 
-# Resources
+# Resources & References
 
-- **ollamar docs**: [hauselin.github.io/ollama-r](https://hauselin.github.io/ollama-r/)
-- **Ollama models**: [ollama.com/library](https://ollama.com/library)
-- **GitHub issues**: [github.com/hauselin/ollama-r/issues](https://github.com/hauselin/ollama-r/issues)
+<div class="info-box">
+**📚 Learn More:** Explore these resources to deepen your understanding of local LLMs and biostatistics with R.
+</div>
 
-**Citation:**
+## Official Documentation
 
-```
-Lin, H., & Safi, T. (2025). ollamar: An R package for running large 
-language models. Journal of Open Source Software, 10(105), 7211. 
-https://doi.org/10.21105/joss.07211
+| Resource | Description |
+|----------|-------------|
+| [ollamar Package](https://hauselin.github.io/ollama-r/) | Official R package documentation |
+| [Ollama Models](https://ollama.com/library) | Browse available models |
+| [Ollama Blog](https://ollama.com/blog) | Latest features and tutorials |
+
+## Recommended Reading
+
+- **Structured Outputs**: [ollama.com/blog/structured-outputs](https://ollama.com/blog/structured-outputs)
+- **Tool Calling**: [ollama.com/blog/tool-support](https://ollama.com/blog/tool-support)
+- **Model Selection Guide**: Choose models based on your task complexity
+
+## Citation
+
+If you use ollamar in your research, please cite:
+
+```bibtex
+@article{Lin2025,
+  author = {Lin, Hause and Safi, Tawab},
+  title = {ollamar: An R package for running large language models},
+  journal = {Journal of Open Source Software},
+  volume = {10},
+  number = {105},
+  pages = {7211},
+  year = {2025},
+  doi = {10.21105/joss.07211}
+}
 ```
 
 ---
 
+# Session Information
+
+<details>
+<summary>Click to expand session info</summary>
+
 ```{r session-info}
 sessionInfo()
 ```
+
+</details>
+
+---
+
+<div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; margin-top: 30px;">
+<h3 style="color: white; margin: 0;">🎉 Thank You for Exploring!</h3>
+<p>Found this useful? Star the repository on GitHub!</p>
+<p><a href="https://github.com/ahjavid/R-Ollama-Lab" style="color: #fff; text-decoration: underline;">github.com/ahjavid/R-Ollama-Lab</a></p>
+</div>
