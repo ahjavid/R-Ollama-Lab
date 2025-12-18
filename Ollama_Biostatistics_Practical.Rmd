@@ -83,11 +83,70 @@ h2 { color: #667eea; }
 
 /* Output Styling */
 .llm-output {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #667eea;
+  border-radius: 0 12px 12px 0;
+  padding: 20px 25px;
+  margin: 20px 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #2d3748;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.llm-output h1, .llm-output h2, .llm-output h3, 
+.llm-output h4, .llm-output h5, .llm-output h6 {
+  color: #4a5568;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+.llm-output ul, .llm-output ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+.llm-output li {
+  margin: 0.3em 0;
+}
+.llm-output code {
+  background-color: #edf2f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.llm-output strong {
+  color: #2b6cb0;
+}
+.llm-output blockquote {
+  border-left: 3px solid #cbd5e0;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #718096;
+}
+
+/* Clean Output Blocks */
+pre:not(.sourceCode) {
   background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 5px;
-  padding: 15px;
-  margin: 10px 0;
+  border-left: 4px solid #667eea;
+  padding: 15px 20px;
+  margin: 15px 0;
+  border-radius: 0 8px 8px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #333;
+}
+
+/* Markdown-style formatting in outputs */
+pre:not(.sourceCode) strong,
+pre:not(.sourceCode) b {
+  font-weight: 600;
+}
+
+/* Better list rendering in text output */
+pre:not(.sourceCode) {
+  overflow-x: auto;
 }
 ```
 
@@ -97,7 +156,7 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   cache = FALSE,
-  comment = "#>"
+  comment = ""
 )
 
 # Set eval to TRUE for chunks you want to run
@@ -163,21 +222,28 @@ pull("llama3.2:3b")        # Quick explanations
 
 Get expert advice on methods and tests:
 
-```{r consultation, eval=run_llm}
+```{r consultation, eval=run_llm, results='asis'}
 library(ollamar)
 
 # Setup: System prompt for biostatistics expert
-expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions."
+expert_prompt <- "You are a senior biostatistician. Give concise, evidence-based recommendations with key assumptions. Use markdown formatting."
 
-# Query function
-ask_expert <- function(question, model = "gemma3:12b") {
+# Query function that formats output for R Markdown
+ask_expert <- function(question, model = "gemma3:12b", show = TRUE) {
   msgs <- create_messages(
     create_message(expert_prompt, role = "system"),
     create_message(question)
   )
-  chat(model, msgs, 
+  response <- chat(model, msgs, 
        temperature = 0.3, num_predict = 800,
        output = "text")
+  # Wrap in a styled div for better presentation
+  if (show) {
+    cat("\n<div class='llm-output'>\n\n")
+    cat(response)
+    cat("\n\n</div>\n")
+  }
+  invisible(response)
 }
 
 # Example: Which test?
@@ -192,11 +258,10 @@ Question: Best statistical test and why?
 
 Generate analysis code with proper parameters:
 
-```{r codegen, eval=run_llm}
-# Code generation function
-# Note: avoid stop sequences when generating code with markdown formatting
-generate_code <- function(prompt, model = "qwen3:14b", num_predict = 2000) {
-  generate(
+```{r codegen, eval=run_llm, results='asis'}
+# Code generation function with formatted output
+generate_code <- function(prompt, model = "qwen3:14b", num_predict = 2000, show = TRUE) {
+  response <- generate(
     model,
     prompt,
     temperature = 0.2,      # Low for deterministic code
@@ -204,10 +269,16 @@ generate_code <- function(prompt, model = "qwen3:14b", num_predict = 2000) {
     num_predict = num_predict,
     output = "text"
   )
+  if (show) {
+    cat("\n<div class='llm-output'>\n\n")
+    cat(response)
+    cat("\n\n</div>\n")
+  }
+  invisible(response)
 }
 
 # Example: Mixed model code
-code <- generate_code("
+generate_code("
 Write R code for mixed-effects model:
 - Data: longitudinal BP measurements (n=200 patients, 4 timepoints)
 - Fixed: treatment (2 levels), time, treatment*time
@@ -215,24 +286,24 @@ Write R code for mixed-effects model:
 - Use lme4, include model diagnostics
 - Keep code under 50 lines
 ")
-
-cat(code)
 ```
 
 ## Pattern 3: Iterative Analysis Design
 
 Build complex analyses step-by-step:
 
-```{r iterative, eval=run_llm}
+```{r iterative, eval=run_llm, results='asis'}
 # Start conversation
 conv <- create_messages(
-  create_message("You are a biostatistics consultant guiding analysis design.", role = "system"),
+  create_message("You are a biostatistics consultant guiding analysis design. Use markdown formatting.", role = "system"),
   create_message("Design primary analysis for Phase 3 hypertension trial comparing Drug A vs Placebo")
 )
 
 # Step 1: Get approach
 step1 <- chat("gemma3:12b", conv, output = "text")
-cat("=== APPROACH ===\n", step1, "\n\n")
+cat("\n### 📋 Analysis Approach\n\n<div class='llm-output'>\n\n")
+cat(step1)
+cat("\n\n</div>\n")
 
 # Step 2: Add details, continue conversation
 conv <- append_message(step1, role = "assistant", x = conv)
@@ -240,14 +311,18 @@ conv <- append_message("Primary endpoint: Change in SBP at 12 weeks. Baseline SB
                        role = "user", x = conv)
 
 step2 <- chat("gemma3:12b", conv, output = "text")
-cat("=== DETAILED PLAN ===\n", step2, "\n\n")
+cat("\n### 📊 Detailed Plan\n\n<div class='llm-output'>\n\n")
+cat(step2)
+cat("\n\n</div>\n")
 
 # Step 3: Get code (switch to code model)
 conv <- append_message(step2, role = "assistant", x = conv)
 conv <- append_message("Provide complete R code for this analysis", role = "user", x = conv)
 
 code <- chat("qwen3:14b", conv, output = "text")
-cat("=== CODE ===\n", code, "\n")
+cat("\n### 💻 Generated Code\n\n<div class='llm-output'>\n\n")
+cat(code)
+cat("\n\n</div>\n")
 ```
 
 ---
@@ -260,7 +335,7 @@ cat("=== CODE ===\n", code, "\n")
 
 ## Sample Size & Power
 
-```{r power, eval=run_llm}
+```{r power, eval=run_llm, results='asis'}
 power_query <- "
 Trial design:
 - Outcome: HbA1c reduction (continuous, SD=1.2%)
@@ -271,16 +346,13 @@ Trial design:
 Calculate sample size per group. Provide R code using pwr package.
 "
 
-result <- generate_code(power_query)
-cat(result)
-
-# You can then run the generated code
+generate_code(power_query)
 ```
 
 ## Survival Analysis Pipeline
 
-```{r survival, eval=run_llm}
-survival_code <- generate_code("
+```{r survival, eval=run_llm, results='asis'}
+generate_code("
 Create survival analysis for cancer trial (n=250):
 1. Generate realistic data: time (months), status (0/1), treatment (A/B), age, stage
 2. Kaplan-Meier curves by treatment
@@ -290,27 +362,23 @@ Create survival analysis for cancer trial (n=250):
 6. Forest plot of HRs
 Make it publication-ready. Use survival and survminer packages.
 ")
-
-cat(survival_code)
 ```
 
 ## Missing Data Strategy
 
-```{r missing, eval=run_llm}
-missing_advice <- ask_expert("
+```{r missing, eval=run_llm, results='asis'}
+ask_expert("
 Longitudinal trial, 4 visits, ~20% dropout by visit 4 (likely MNAR).
 Primary: Change from baseline at visit 4.
 Options: MMRM, MI, LOCF, complete case?
 Recommend primary + sensitivity analyses.
 ")
-
-cat(missing_advice)
 ```
 
 ## Propensity Score Analysis
 
-```{r psm, eval=run_llm}
-psm_code <- generate_code("
+```{r psm, eval=run_llm, results='asis'}
+generate_code("
 Observational study comparing treatment effect:
 - Outcome: 30-day mortality (binary)
 - Treatment: Surgery vs Medical (n=800 each)
@@ -324,8 +392,6 @@ Complete PS analysis:
 5. Sensitivity to hidden confounding
 Use MatchIt and sensemakr packages. Commented code.
 ")
-
-cat(psm_code)
 ```
 
 ---
@@ -338,7 +404,7 @@ cat(psm_code)
 
 Process multiple queries simultaneously:
 
-```{r parallel, eval=run_llm}
+```{r parallel, eval=run_llm, results='asis'}
 library(httr2)
 
 # Multiple statistical questions
@@ -362,10 +428,10 @@ resps <- req_perform_parallel(reqs, on_error = "continue")
 # Process results
 answers <- lapply(resps, resp_process, "text")
 
-# Display
+# Display with styled boxes
 for(i in seq_along(questions)) {
-  cat(sprintf("\nQ%d: %s\n%s\n%s\n", i, questions[i], 
-              strrep("-", 60), answers[[i]]))
+  cat(sprintf("\n**Q%d: %s**\n\n<div class='llm-output'>\n\n%s\n\n</div>\n", 
+              i, questions[i], answers[[i]]))
 }
 ```
 
@@ -415,7 +481,7 @@ print(results)
 
 Get responses in structured format:
 
-```{r structured, eval=run_llm}
+```{r structured, eval=run_llm, results='asis'}
 # Define schema (JSON schema as R list)
 analysis_schema <- list(
   type = "object",
@@ -436,12 +502,14 @@ result <- chat(
   output = "structured"
 )
 
-# Access fields from the structured response
-cat("Test:", result$test_name, "\n")
-cat("Function:", result$r_function, "\n")
-cat("\nAssumptions:\n")
-for(a in result$assumptions) cat("  -", a, "\n")
-cat("\nInterpretation:\n", result$interpretation, "\n")
+# Display structured result nicely
+cat("\n<div class='llm-output'>\n\n")
+cat("**Test:**", result$test_name, "\n\n")
+cat("**R Function:**", paste0("`", result$r_function, "`"), "\n\n")
+cat("**Assumptions:**\n\n")
+for(a in result$assumptions) cat("- ", a, "\n")
+cat("\n**Interpretation:**\n\n", result$interpretation, "\n\n")
+cat("</div>\n")
 ```
 
 ---
@@ -452,7 +520,7 @@ cat("\nInterpretation:\n", result$interpretation, "\n")
 **🔬 Hands-On Demo:** This section uses R's built-in `mtcars` dataset to demonstrate a complete LLM-assisted analysis workflow from exploratory analysis to interpretation.
 </div>
 
-```{r real-data-example, eval=run_llm}
+```{r real-data-example, eval=run_llm, results='asis'}
 # Load and summarize real data
 data(mtcars)
 
@@ -473,7 +541,8 @@ sum(mtcars$cyl==4), sum(mtcars$cyl==6), sum(mtcars$cyl==8),
 sum(mtcars$am==0), sum(mtcars$am==1))
 
 # Ask LLM for analysis recommendation
-analysis_plan <- ask_expert(paste0(data_summary, "
+cat("\n### 📊 Analysis Plan\n")
+ask_expert(paste0(data_summary, "
 Recommend the appropriate statistical analysis approach. Consider:
 1. Which test/model to use and why
 2. Key assumptions to check
@@ -481,10 +550,9 @@ Recommend the appropriate statistical analysis approach. Consider:
 4. How to interpret results
 "))
 
-cat("=== ANALYSIS PLAN ===\n", analysis_plan, "\n\n")
-
 # Generate analysis code
-analysis_code <- generate_code(paste0(data_summary, "
+cat("\n### 💻 Generated R Code\n")
+generate_code(paste0(data_summary, "
 Write complete R code to:
 1. Visualize the relationship (boxplot of mpg by transmission)
 2. Fit appropriate model (multiple regression: mpg ~ am + wt + hp)
@@ -492,8 +560,6 @@ Write complete R code to:
 4. Report results with confidence intervals
 Use base R and keep it concise.
 "))
-
-cat("=== GENERATED CODE ===\n", analysis_code, "\n")
 ```
 
 ---
@@ -657,8 +723,9 @@ generate("llama3.2:3b", "...",
 
 From design to code:
 
-```{r complete-example, eval=run_llm}
+```{r complete-example, eval=run_llm, results='asis'}
 # Step 1: Design consultation
+cat("\n### 📋 Step 1: Design Consultation\n")
 design <- ask_expert("
 Trial: compare 3 doses of new antihypertensive
 Primary: SBP change at week 12
@@ -666,11 +733,13 @@ Secondary: DBP change, response rate (SBP<140)
 Covariates: baseline SBP, age, BMI
 Sample: n=75 per group
 Recommend primary analysis approach
-")
-cat("=== DESIGN ===\n", design, "\n\n")
+", show = FALSE)  # Capture without showing
+
+cat("\n<div class='llm-output'>\n\n", design, "\n\n</div>\n")
 
 # Step 2: Generate analysis code (use higher token limit for complex code)
-code <- generate_code(sprintf("
+cat("\n### 💻 Step 2: Analysis Code\n")
+generate_code(sprintf("
 Based on this design:
 %s
 
@@ -683,16 +752,13 @@ Create R code for:
 Use tidyverse + emmeans. Well-commented.
 ", design), num_predict = 3000)
 
-cat("=== CODE ===\n", code, "\n\n")
-
 # Step 3: Generate reporting template (also needs more tokens)
-report <- generate_code("
+cat("\n### 📝 Step 3: Report Template\n")
+generate_code("
 Create R Markdown template for reporting the analysis above.
 Include: Methods section, Results section with inline R code,
 Tables and figures. Follow CONSORT style.
 ", num_predict = 2500)
-
-cat("=== REPORT TEMPLATE ===\n", report, "\n")
 ```
 
 ---
